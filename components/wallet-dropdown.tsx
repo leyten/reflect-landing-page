@@ -1,60 +1,36 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { usePrivy } from "@privy-io/react-auth"
+import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { Button } from "@/components/ui/button"
-import { ChevronDown, Copy, ExternalLink, LogOut, Settings } from "lucide-react"
+import { ChevronDown, Copy, ExternalLink, LogOut, Settings, RefreshCw } from "lucide-react"
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
-
-interface SolanaWallet {
-  id: string
-  address: string
-  chainType: string
-  ownerId: string
-  createdAt: string
-}
 
 export default function WalletDropdown() {
   const { user, logout, authenticated, ready: privyReady } = usePrivy()
+  const { wallets, ready: walletsReady } = useWallets()
   const [isOpen, setIsOpen] = useState(false)
-  const [solanaWallets, setSolanaWallets] = useState<SolanaWallet[]>([])
-  const [loading, setLoading] = useState(false)
-  const [fetchingWallets, setFetchingWallets] = useState(false)
   const [solBalance, setSolBalance] = useState<number | null>(null)
   const [usdcBalance, setUsdcBalance] = useState<number | null>(1000) // Mocked for now
+  const [loading, setLoading] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Fetch Solana wallets from our API route
-  const fetchSolanaWallets = async () => {
-    if (!authenticated || !user?.id) return
-
-    try {
-      setFetchingWallets(true)
-      const response = await fetch(`/api/wallets?userId=${user.id}`)
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch wallets: ${response.status}`)
-      }
-
-      const data = await response.json()
-      console.log("Fetched Solana wallets:", data.wallets)
-      setSolanaWallets(data.wallets || [])
-    } catch (error) {
-      console.error("Error fetching Solana wallets:", error)
-    } finally {
-      setFetchingWallets(false)
-    }
-  }
-
-  // Fetch wallets when user is authenticated
+  // Log all wallets for debugging
   useEffect(() => {
-    if (privyReady && authenticated && user?.id) {
-      fetchSolanaWallets()
+    if (walletsReady) {
+      console.log("All wallets:", wallets)
     }
-  }, [privyReady, authenticated, user])
+  }, [wallets, walletsReady])
 
-  // Get the primary Solana wallet to display
-  const solanaWallet = solanaWallets.length > 0 ? solanaWallets[0] : null
+  // Find a wallet that looks like a Solana wallet (by address format)
+  const solanaWallet = wallets.find(
+    (wallet) =>
+      wallet.address &&
+      (wallet.address.length === 44 || // Solana addresses are typically 44 characters
+        wallet.chainId?.includes("solana") ||
+        wallet.type === "solana"),
+  )
+
   const walletAddress = solanaWallet?.address || ""
   const truncatedAddress = walletAddress
     ? `${walletAddress.substring(0, 4)}...${walletAddress.substring(walletAddress.length - 4)}`
@@ -64,11 +40,24 @@ export default function WalletDropdown() {
     try {
       setLoading(true)
       const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed")
-      const publicKey = new PublicKey(address)
-      const balance = await connection.getBalance(publicKey)
-      setSolBalance(balance / LAMPORTS_PER_SOL)
+
+      // Validate the address format before creating a PublicKey
+      if (!address || address.length !== 44) {
+        console.warn("Invalid Solana address format:", address)
+        setSolBalance(0)
+        return
+      }
+
+      try {
+        const publicKey = new PublicKey(address)
+        const balance = await connection.getBalance(publicKey)
+        setSolBalance(balance / LAMPORTS_PER_SOL)
+      } catch (err) {
+        console.error("Error creating PublicKey or fetching balance:", err)
+        setSolBalance(0)
+      }
     } catch (error) {
-      console.error("Error fetching Solana balance:", error)
+      console.error("Error in fetchSolanaBalance:", error)
       setSolBalance(0)
     } finally {
       setLoading(false)
@@ -108,7 +97,7 @@ export default function WalletDropdown() {
 
   // Determine the button label based on state
   let buttonLabel = truncatedAddress
-  if (fetchingWallets) {
+  if (!privyReady || !walletsReady) {
     buttonLabel = "Loading wallet..."
   } else if (!walletAddress) {
     buttonLabel = "Wallet"
@@ -122,7 +111,7 @@ export default function WalletDropdown() {
       <Button
         onClick={() => setIsOpen(!isOpen)}
         className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-full px-4 py-2 flex items-center gap-2"
-        disabled={fetchingWallets}
+        disabled={!privyReady || !walletsReady}
       >
         <svg
           width="20"
@@ -154,7 +143,7 @@ export default function WalletDropdown() {
             strokeLinejoin="round"
           />
         </svg>
-        <span className={fetchingWallets ? "animate-pulse" : ""}>{buttonLabel}</span>
+        <span className={!privyReady || !walletsReady ? "animate-pulse" : ""}>{buttonLabel}</span>
         <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </Button>
 
@@ -164,7 +153,17 @@ export default function WalletDropdown() {
             {hasSolanaWallet ? (
               <>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm font-medium text-gray-500">Solana Wallet</div>
+                  <div className="text-sm font-medium text-gray-500">Wallet</div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => fetchSolanaBalance(walletAddress)}
+                    disabled={loading}
+                    className="h-8 p-0"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                    <span className="sr-only">Refresh balance</span>
+                  </Button>
                 </div>
 
                 <div className="flex items-center gap-2 mb-4">
@@ -220,10 +219,10 @@ export default function WalletDropdown() {
               </>
             ) : (
               <div className="py-2 text-center text-gray-500 mb-4">
-                {fetchingWallets ? (
-                  <p>Loading your Solana wallet...</p>
+                {!privyReady || !walletsReady ? (
+                  <p>Loading your wallet...</p>
                 ) : (
-                  <p>No Solana wallet found. Please contact support.</p>
+                  <p>No wallet found. Please refresh the page or try again later.</p>
                 )}
               </div>
             )}
