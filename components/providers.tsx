@@ -19,6 +19,10 @@ export function Providers({ children }: PropsWithChildren) {
           solana: {
             enabled: true,
           },
+          // Explicitly disable Ethereum to ensure only Solana wallets are created
+          ethereum: {
+            enabled: false,
+          },
         },
         supportedWallets: [{ walletName: "phantom" }, { walletName: "solflare" }],
       }}

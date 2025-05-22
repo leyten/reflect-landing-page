@@ -25,16 +25,16 @@ export default function WalletDropdown() {
     }
   }, [wallets, walletsReady])
 
-  // Find the first Solana wallet (embedded or external)
-  const solanaWallet = wallets.find((wallet) => {
-    // Check if it's a Solana wallet
-    return (
-      wallet.chain === "solana" || wallet.chainName === "solana" || (wallet.address && wallet.address.length === 44)
-    )
-  })
+  // Find Solana wallets - prioritize explicit Solana wallets first
+  const solanaWallets = wallets.filter(
+    (wallet) =>
+      wallet.chain === "solana" ||
+      wallet.chainName?.toLowerCase() === "solana" ||
+      (wallet.walletClientType === "privy" && wallet.address?.length === 44),
+  )
 
-  // Find any embedded wallet
-  const embeddedWallet = wallets.find((wallet) => wallet.walletClientType === "privy")
+  // Get the primary Solana wallet to display
+  const solanaWallet = solanaWallets.length > 0 ? solanaWallets[0] : null
 
   // Only attempt to create a wallet once and only if truly needed
   useEffect(() => {
@@ -42,24 +42,26 @@ export default function WalletDropdown() {
       // Only proceed if:
       // 1. Wallets are ready
       // 2. We haven't attempted wallet creation yet
-      // 3. No wallets exist at all
-      if (walletsReady && !attemptedWalletCreation && wallets.length === 0) {
+      // 3. No Solana wallets exist
+      if (walletsReady && !attemptedWalletCreation && solanaWallets.length === 0) {
         try {
           setAttemptedWalletCreation(true)
-          console.log("No wallets found, creating one automatically...")
-          const wallet = await createWallet()
-          console.log("Created wallet:", wallet)
+          console.log("No Solana wallets found, creating one automatically...")
+          const wallet = await createWallet({
+            solana: true,
+          })
+          console.log("Created Solana wallet:", wallet)
         } catch (error) {
-          console.error("Error creating wallet:", error)
+          console.error("Error creating Solana wallet:", error)
           setWalletError(error instanceof Error ? error.message : "Failed to create wallet")
         }
       }
     }
 
     checkAndCreateWalletIfNeeded()
-  }, [walletsReady, wallets, createWallet, attemptedWalletCreation])
+  }, [walletsReady, solanaWallets, createWallet, attemptedWalletCreation])
 
-  const walletAddress = solanaWallet?.address || embeddedWallet?.address || ""
+  const walletAddress = solanaWallet?.address || ""
   const truncatedAddress = walletAddress
     ? `${walletAddress.substring(0, 4)}...${walletAddress.substring(walletAddress.length - 4)}`
     : "Wallet"
@@ -82,11 +84,8 @@ export default function WalletDropdown() {
   useEffect(() => {
     if (solanaWallet?.address) {
       fetchSolanaBalance(solanaWallet.address)
-    } else if (embeddedWallet?.address && embeddedWallet.address.length === 44) {
-      // If we have an embedded wallet with a Solana-like address, try to fetch its balance
-      fetchSolanaBalance(embeddedWallet.address)
     }
-  }, [solanaWallet, embeddedWallet])
+  }, [solanaWallet])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -121,8 +120,8 @@ export default function WalletDropdown() {
     buttonLabel = "Wallet"
   }
 
-  // Determine if we have a usable wallet (either Solana or embedded)
-  const hasUsableWallet = !!solanaWallet || !!embeddedWallet
+  // Determine if we have a usable Solana wallet
+  const hasSolanaWallet = !!solanaWallet
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -168,7 +167,7 @@ export default function WalletDropdown() {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
           <div className="p-4">
-            {hasUsableWallet ? (
+            {hasSolanaWallet ? (
               <>
                 <div className="flex items-center gap-2 mb-4">
                   <div className="text-gray-700 font-mono text-sm truncate flex-1">{walletAddress}</div>
@@ -224,11 +223,11 @@ export default function WalletDropdown() {
             ) : (
               <div className="py-2 text-center text-gray-500 mb-4">
                 {!walletsReady ? (
-                  <p>Loading your wallet...</p>
+                  <p>Loading your Solana wallet...</p>
                 ) : walletError ? (
-                  <p>There was an issue with your wallet. Please try again later.</p>
+                  <p>There was an issue with your Solana wallet. Please try again later.</p>
                 ) : (
-                  <p>No wallet found. Please refresh the page or try again later.</p>
+                  <p>No Solana wallet found. Please refresh the page or try again later.</p>
                 )}
               </div>
             )}
