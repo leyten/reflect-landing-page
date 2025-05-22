@@ -17,6 +17,9 @@ export function Providers({ children }: PropsWithChildren) {
         embeddedWallets: {
           createOnLogin: "users-without-wallets",
           noPromptOnSignature: false,
+          solana: {
+            createOnLogin: "users-without-wallets",
+          },
         },
         supportedWallets: [{ walletName: "phantom" }, { walletName: "solflare" }],
       }}

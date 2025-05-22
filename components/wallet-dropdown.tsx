@@ -3,45 +3,75 @@
 import { useState, useRef, useEffect } from "react"
 import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { Button } from "@/components/ui/button"
-import { ChevronDown, Copy, ExternalLink, LogOut, Settings } from "lucide-react"
+import { ChevronDown, Copy, ExternalLink, LogOut, Settings, RefreshCw } from "lucide-react"
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token"
 
 export default function WalletDropdown() {
-  const { user, logout } = usePrivy()
-  const { wallets } = useWallets()
+  const { logout } = usePrivy()
+  const { wallets, ready: walletsReady } = useWallets()
   const [isOpen, setIsOpen] = useState(false)
   const [solBalance, setSolBalance] = useState<number | null>(null)
-  const [usdcBalance, setUsdcBalance] = useState<number | null>(1000) // Mocked for now
+  const [usdcBalance, setUsdcBalance] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Get the embedded wallet (first wallet or null)
-  const embeddedWallet = wallets.find((wallet) => wallet.walletClientType === "privy") || null
-  const walletAddress = embeddedWallet?.address || ""
+  // Find the Solana embedded wallet
+  const solanaWallet = wallets.find((wallet) => {
+    // Check if it's a Privy embedded wallet for Solana
+    return (
+      wallet.walletClientType === "privy" && wallet.chain === "solana" && wallet.address && wallet.address.length === 44
+    )
+  })
+
+  const walletAddress = solanaWallet?.address || ""
   const truncatedAddress = walletAddress
     ? `${walletAddress.substring(0, 4)}...${walletAddress.substring(walletAddress.length - 4)}`
     : "Connect"
+
+  // USDC token address on Solana
+  const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 
   const fetchSolanaBalance = async (address: string) => {
     try {
       setLoading(true)
       const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed")
       const publicKey = new PublicKey(address)
+
+      // Fetch SOL balance
       const balance = await connection.getBalance(publicKey)
       setSolBalance(balance / LAMPORTS_PER_SOL)
+
+      // Fetch USDC balance
+      try {
+        const tokenAccounts = await connection.getParsedTokenAccountsByOwner(publicKey, { programId: TOKEN_PROGRAM_ID })
+
+        const usdcAccount = tokenAccounts.value.find((account) => account.account.data.parsed.info.mint === USDC_MINT)
+
+        if (usdcAccount) {
+          const usdcAmount = usdcAccount.account.data.parsed.info.tokenAmount.uiAmount
+          setUsdcBalance(usdcAmount)
+        } else {
+          setUsdcBalance(0)
+        }
+      } catch (error) {
+        console.error("Error fetching USDC balance:", error)
+        setUsdcBalance(0)
+      }
     } catch (error) {
       console.error("Error fetching Solana balance:", error)
       setSolBalance(0)
+      setUsdcBalance(0)
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    if (embeddedWallet?.address) {
-      fetchSolanaBalance(embeddedWallet.address)
+    if (walletsReady && solanaWallet?.address) {
+      fetchSolanaBalance(solanaWallet.address)
     }
-  }, [embeddedWallet])
+  }, [walletsReady, solanaWallet])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -68,11 +98,25 @@ export default function WalletDropdown() {
     }
   }
 
+  const handleRefresh = () => {
+    if (solanaWallet?.address) {
+      fetchSolanaBalance(solanaWallet.address)
+    }
+  }
+
+  if (!walletsReady) {
+    return (
+      <Button className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-lg px-4 py-2">
+        <span className="animate-pulse">Loading wallet...</span>
+      </Button>
+    )
+  }
+
   return (
     <div className="relative" ref={dropdownRef}>
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-full px-4 py-2 flex items-center gap-2"
+        className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-lg px-4 py-2 flex items-center gap-2"
       >
         <svg
           width="20"
@@ -124,7 +168,13 @@ export default function WalletDropdown() {
                   <span className="text-green-500 text-xl">$</span>
                   <span className="font-medium">USDC</span>
                 </div>
-                <span className="font-medium">${usdcBalance?.toFixed(2) || "0.00"}</span>
+                <span className="font-medium">
+                  {loading ? (
+                    <span className="inline-block w-16 h-5 bg-gray-200 animate-pulse rounded"></span>
+                  ) : (
+                    `$${usdcBalance?.toFixed(2) || "0.00"}`
+                  )}
+                </span>
               </div>
 
               <div className="flex items-center justify-between">
@@ -133,12 +183,24 @@ export default function WalletDropdown() {
                   <span className="font-medium">SOL</span>
                 </div>
                 <span className="font-medium">
-                  {loading ? "Loading..." : `${solBalance?.toFixed(4) || "0.0000"} SOL`}
+                  {loading ? (
+                    <span className="inline-block w-20 h-5 bg-gray-200 animate-pulse rounded"></span>
+                  ) : (
+                    `${solBalance?.toFixed(4) || "0.0000"} SOL`
+                  )}
                 </span>
               </div>
             </div>
 
             <div className="space-y-3">
+              <button
+                className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-md transition-colors"
+                onClick={handleRefresh}
+              >
+                <RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
+                <span>Refresh Balance</span>
+              </button>
+
               <button
                 className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-md transition-colors"
                 onClick={() => {
