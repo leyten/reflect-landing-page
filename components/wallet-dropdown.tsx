@@ -8,16 +8,15 @@ import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 
 export default function WalletDropdown() {
   const { user, logout } = usePrivy()
-  // Use the wallets array from useWallets as shown in the documentation
   const { wallets, ready: walletsReady } = useWallets()
   const { createWallet } = useCreateWallet()
   const [isOpen, setIsOpen] = useState(false)
   const [solBalance, setSolBalance] = useState<number | null>(null)
   const [usdcBalance, setUsdcBalance] = useState<number | null>(1000) // Mocked for now
   const [loading, setLoading] = useState(false)
-  const [creatingWallet, setCreatingWallet] = useState(false)
   const [walletError, setWalletError] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const [attemptedWalletCreation, setAttemptedWalletCreation] = useState(false)
 
   // Log wallets for debugging
   useEffect(() => {
@@ -34,34 +33,33 @@ export default function WalletDropdown() {
     )
   })
 
-  // Automatically create a wallet if none exists and wallets are ready
+  // Find any embedded wallet
+  const embeddedWallet = wallets.find((wallet) => wallet.walletClientType === "privy")
+
+  // Only attempt to create a wallet once and only if truly needed
   useEffect(() => {
-    const autoCreateWallet = async () => {
-      // Only try to create a wallet if:
+    const checkAndCreateWalletIfNeeded = async () => {
+      // Only proceed if:
       // 1. Wallets are ready
-      // 2. No wallets are found
-      // 3. We're not already in the process of creating a wallet
-      // 4. We haven't encountered an error yet
-      if (walletsReady && wallets.length === 0 && !creatingWallet && !walletError) {
+      // 2. We haven't attempted wallet creation yet
+      // 3. No wallets exist at all
+      if (walletsReady && !attemptedWalletCreation && wallets.length === 0) {
         try {
+          setAttemptedWalletCreation(true)
           console.log("No wallets found, creating one automatically...")
-          setCreatingWallet(true)
           const wallet = await createWallet()
           console.log("Created wallet:", wallet)
         } catch (error) {
           console.error("Error creating wallet:", error)
-          // Store the error message but don't show it to the user
           setWalletError(error instanceof Error ? error.message : "Failed to create wallet")
-        } finally {
-          setCreatingWallet(false)
         }
       }
     }
 
-    autoCreateWallet()
-  }, [walletsReady, wallets, createWallet, creatingWallet, walletError])
+    checkAndCreateWalletIfNeeded()
+  }, [walletsReady, wallets, createWallet, attemptedWalletCreation])
 
-  const walletAddress = solanaWallet?.address || ""
+  const walletAddress = solanaWallet?.address || embeddedWallet?.address || ""
   const truncatedAddress = walletAddress
     ? `${walletAddress.substring(0, 4)}...${walletAddress.substring(walletAddress.length - 4)}`
     : "Wallet"
@@ -84,8 +82,11 @@ export default function WalletDropdown() {
   useEffect(() => {
     if (solanaWallet?.address) {
       fetchSolanaBalance(solanaWallet.address)
+    } else if (embeddedWallet?.address && embeddedWallet.address.length === 44) {
+      // If we have an embedded wallet with a Solana-like address, try to fetch its balance
+      fetchSolanaBalance(embeddedWallet.address)
     }
-  }, [solanaWallet])
+  }, [solanaWallet, embeddedWallet])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -114,20 +115,21 @@ export default function WalletDropdown() {
 
   // Determine the button label based on state
   let buttonLabel = truncatedAddress
-  if (creatingWallet) {
-    buttonLabel = "Creating wallet..."
-  } else if (!walletsReady) {
+  if (!walletsReady) {
     buttonLabel = "Loading wallet..."
-  } else if (!solanaWallet) {
+  } else if (!walletAddress) {
     buttonLabel = "Wallet"
   }
+
+  // Determine if we have a usable wallet (either Solana or embedded)
+  const hasUsableWallet = !!solanaWallet || !!embeddedWallet
 
   return (
     <div className="relative" ref={dropdownRef}>
       <Button
         onClick={() => setIsOpen(!isOpen)}
         className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-full px-4 py-2 flex items-center gap-2"
-        disabled={creatingWallet || !walletsReady}
+        disabled={!walletsReady}
       >
         <svg
           width="20"
@@ -159,14 +161,14 @@ export default function WalletDropdown() {
             strokeLinejoin="round"
           />
         </svg>
-        <span className={creatingWallet || !walletsReady ? "animate-pulse" : ""}>{buttonLabel}</span>
+        <span className={!walletsReady ? "animate-pulse" : ""}>{buttonLabel}</span>
         <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </Button>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
           <div className="p-4">
-            {solanaWallet ? (
+            {hasUsableWallet ? (
               <>
                 <div className="flex items-center gap-2 mb-4">
                   <div className="text-gray-700 font-mono text-sm truncate flex-1">{walletAddress}</div>
@@ -221,12 +223,12 @@ export default function WalletDropdown() {
               </>
             ) : (
               <div className="py-2 text-center text-gray-500 mb-4">
-                {creatingWallet ? (
-                  <p>Creating your wallet...</p>
+                {!walletsReady ? (
+                  <p>Loading your wallet...</p>
                 ) : walletError ? (
                   <p>There was an issue with your wallet. Please try again later.</p>
                 ) : (
-                  <p>No wallet found. One will be created for you automatically.</p>
+                  <p>No wallet found. Please refresh the page or try again later.</p>
                 )}
               </div>
             )}
