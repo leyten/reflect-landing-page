@@ -63,7 +63,7 @@ export default function PrivyDropdown() {
           onClick={login}
           className="w-[160px] bg-black text-white hover:bg-black focus:bg-black active:bg-black rounded-lg px-4 py-2 text-sm font-medium"
         >
-          Connect Wallet
+          Log In
         </Button>
       </div>
     )
