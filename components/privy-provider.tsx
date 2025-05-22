@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
+
 import { PrivyProvider } from "@privy-io/react-auth"
-import { WaitlistProvider } from "@/context/waitlist-context"
 
 export default function PrivyProviderWrapper({
   children,
@@ -24,7 +24,7 @@ export default function PrivyProviderWrapper({
         },
       }}
     >
-      <WaitlistProvider>{children}</WaitlistProvider>
+      {children}
     </PrivyProvider>
   )
 }
