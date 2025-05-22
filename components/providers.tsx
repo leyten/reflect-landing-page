@@ -15,7 +15,11 @@ export function Providers({ children }: PropsWithChildren) {
           logo: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/LogoTransparant-EFMqjstaAL9FZb6V7FEbMIIXa9gFEu.png",
         },
         embeddedWallets: {
-          // Remove the top-level createOnLogin
+          // Disable Ethereum wallet creation
+          ethereum: {
+            createOnLogin: "off",
+          },
+          // Enable Solana wallet creation
           solana: {
             createOnLogin: "users-without-wallets",
           },

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { Button } from "@/components/ui/button"
-import { ChevronDown, Copy, ExternalLink, LogOut, Settings, RefreshCw } from "lucide-react"
+import { ChevronDown, Copy, ExternalLink, LogOut, Settings, RefreshCw } from 'lucide-react'
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token"
 
@@ -14,6 +14,7 @@ export default function WalletDropdown() {
   const [solBalance, setSolBalance] = useState<number | null>(null)
   const [usdcBalance, setUsdcBalance] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
+  const [creatingWallet, setCreatingWallet] = useState(false)
   const [debugInfo, setDebugInfo] = useState<string>("")
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -31,28 +32,30 @@ export default function WalletDropdown() {
     }
   }, [walletsReady, wallets])
 
-  // Find the Solana wallet
+  // Find the Solana wallet - specifically look for addresses that don't start with 0x
   const solanaWallet = wallets.find((wallet) => {
-    // Check for any Solana wallet
-    return wallet.address && wallet.address.length === 44
+    return wallet.address && !wallet.address.startsWith("0x")
   })
 
   // Create a Solana wallet if none exists
   useEffect(() => {
     const createSolanaWallet = async () => {
-      if (privyReady && walletsReady && wallets.length === 0 && createWallet) {
+      if (privyReady && walletsReady && !solanaWallet && createWallet && !creatingWallet) {
         try {
+          setCreatingWallet(true)
           console.log("Creating Solana wallet...")
           await createWallet("privy", { chain: "solana" })
           console.log("Solana wallet created successfully")
         } catch (error) {
           console.error("Error creating Solana wallet:", error)
+        } finally {
+          setCreatingWallet(false)
         }
       }
     }
 
     createSolanaWallet()
-  }, [privyReady, walletsReady, wallets.length, createWallet])
+  }, [privyReady, walletsReady, solanaWallet, createWallet, creatingWallet])
 
   const walletAddress = solanaWallet?.address || ""
   const truncatedAddress = walletAddress
@@ -137,12 +140,13 @@ export default function WalletDropdown() {
   const handleCreateWallet = async () => {
     if (createWallet) {
       try {
-        setLoading(true)
+        setCreatingWallet(true)
+        // Explicitly create a Solana wallet
         await createWallet("privy", { chain: "solana" })
       } catch (error) {
         console.error("Error creating wallet:", error)
       } finally {
-        setLoading(false)
+        setCreatingWallet(false)
       }
     }
   }
@@ -198,10 +202,10 @@ export default function WalletDropdown() {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
           <div className="p-4">
-            {walletAddress ? (
+            {solanaWallet ? (
               <>
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="text-gray-700 font-mono text-sm truncate flex-1">{walletAddress}</div>
+                  <div className="text-gray-700 font-mono text-sm truncate flex-1">{solanaWallet.address}</div>
                   <button
                     onClick={copyToClipboard}
                     className="text-gray-500 hover:text-gray-700"
@@ -283,9 +287,9 @@ export default function WalletDropdown() {
                 <button
                   className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white py-3 px-4 rounded-md transition-colors"
                   onClick={handleCreateWallet}
-                  disabled={loading}
+                  disabled={creatingWallet}
                 >
-                  {loading ? (
+                  {creatingWallet ? (
                     <span className="flex items-center gap-2">
                       <RefreshCw className="h-5 w-5 animate-spin" />
                       Creating...
