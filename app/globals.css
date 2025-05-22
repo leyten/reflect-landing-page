@@ -49,6 +49,16 @@
 
 body {
   @apply bg-background text-foreground;
+  overflow-y: scroll; /* Always show scrollbar to prevent layout shift */
+}
+
+html {
+  scrollbar-gutter: stable; /* Reserves space for the scrollbar */
+}
+
+.fixed-width-container {
+  width: 140px; /* Match the button width */
+  display: inline-block;
 }
 
 @layer base {

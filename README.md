@@ -1,30 +1,25 @@
 # Reflect
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+![Reflect Logo](/public/reflected-logo.png)
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/leytens-projects/v0-reflect)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/L9GqjBFMG3m)
+## Reflect is an AI-powered trading co-pilot for emotional traders.
 
-## Overview
+Built for the fast, high-pressure world of Solana, Reflect helps you trade smarter by understanding not just the market, but you.
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+Once you connect your wallet, Reflect analyzes your on-chain activity and builds a behavioral profile: how often you trade, how you handle risk, and how your emotions show up in your decisions. It categorizes your trading style, whether you're impulsive, overconfident, hesitant, or stuck in a losing cycle and gives you tailored, psychologically-aware feedback.
 
-## Deployment
+As a browser extension, Reflect works live, right alongside your trading activity. When you're about to overtrade, revenge trade, or make an emotionally driven move, Reflect quietly steps in with real-time pop-ups, intelligent nudges to help break the pattern before it costs you.
 
-Your project is live at:
+## Getting Started
 
-**[https://vercel.com/leytens-projects/v0-reflect](https://vercel.com/leytens-projects/v0-reflect)**
+Reflect integrates seamlessly with your existing Solana wallets. Simply connect your wallet, set your preferences, and let Reflect's AI begin analyzing your trading patterns and the broader market to provide personalized insights.
 
-## Build your app
+## Privacy & Security
 
-Continue building your app on:
+Your financial data never leaves your device. Reflect's AI runs locally when possible and all communications are end-to-end encrypted. We never store your private keys and you remain in complete control of your assets at all times.
 
-**[https://v0.dev/chat/projects/L9GqjBFMG3m](https://v0.dev/chat/projects/L9GqjBFMG3m)**
+## Join the Community
 
-## How It Works
+Connect with other traders using Reflect:
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+- [X](https://x.com/Use_Reflect)

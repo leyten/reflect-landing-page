@@ -3452,8 +3452,8 @@ packages:
   zod@3.24.1:
     resolution: {integrity: sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==}
 
-  zod@3.25.20:
-    resolution: {integrity: sha512-z03fqpTMDF1G02VLKUMt6vyACE7rNWkh3gpXVHgPTw28NPtDFRGvcpTtPwn2kMKtQ0idtYJUTxchytmnqYswcw==}
+  zod@3.25.21:
+    resolution: {integrity: sha512-k3MXcS5jrVo00Irs53CngVH4gHL1LgcCfOd9fOmZ7Pq/BP8eBop0P5RJDX5SsKchuxTMewJI0/AuK7MdD6ePXw==}
 
   zustand@5.0.5:
     resolution: {integrity: sha512-mILtRfKW9xM47hqxGIxCv12gXusoY/xTSHBYApXozR0HmQv299whhBeeAcRy+KrPPybzosvJBCOmVjq6x12fCg==}
@@ -4029,7 +4029,7 @@ snapshots:
 
   '@privy-io/api-base@1.5.1':
     dependencies:
-      zod: 3.25.20
+      zod: 3.25.21
 
   '@privy-io/chains@0.0.1': {}
 
@@ -4069,8 +4069,8 @@ snapshots:
       '@privy-io/api-base': 1.5.1
       bs58: 5.0.0
       libphonenumber-js: 1.12.8
-      viem: 2.30.0(bufferutil@4.0.9)(typescript@5.0.2)(utf-8-validate@5.0.10)(zod@3.25.20)
-      zod: 3.25.20
+      viem: 2.30.0(bufferutil@4.0.9)(typescript@5.0.2)(utf-8-validate@5.0.10)(zod@3.25.21)
+      zod: 3.25.21
     transitivePeerDependencies:
       - bufferutil
       - typescript
@@ -6022,10 +6022,10 @@ snapshots:
       typescript: 5.0.2
       zod: 3.24.1
 
-  abitype@1.0.8(typescript@5.0.2)(zod@3.25.20):
+  abitype@1.0.8(typescript@5.0.2)(zod@3.25.21):
     optionalDependencies:
       typescript: 5.0.2
-      zod: 3.25.20
+      zod: 3.25.21
 
   abort-controller@3.0.0:
     dependencies:
@@ -6871,14 +6871,14 @@ snapshots:
     transitivePeerDependencies:
       - zod
 
-  ox@0.6.9(typescript@5.0.2)(zod@3.25.20):
+  ox@0.6.9(typescript@5.0.2)(zod@3.25.21):
     dependencies:
       '@adraffy/ens-normalize': 1.11.0
       '@noble/curves': 1.8.2
       '@noble/hashes': 1.7.2
       '@scure/bip32': 1.6.2
       '@scure/bip39': 1.5.4
-      abitype: 1.0.8(typescript@5.0.2)(zod@3.25.20)
+      abitype: 1.0.8(typescript@5.0.2)(zod@3.25.21)
       eventemitter3: 5.0.1
     optionalDependencies:
       typescript: 5.0.2
@@ -7611,15 +7611,15 @@ snapshots:
       - utf-8-validate
       - zod
 
-  viem@2.30.0(bufferutil@4.0.9)(typescript@5.0.2)(utf-8-validate@5.0.10)(zod@3.25.20):
+  viem@2.30.0(bufferutil@4.0.9)(typescript@5.0.2)(utf-8-validate@5.0.10)(zod@3.25.21):
     dependencies:
       '@noble/curves': 1.8.2
       '@noble/hashes': 1.7.2
       '@scure/bip32': 1.6.2
       '@scure/bip39': 1.5.4
-      abitype: 1.0.8(typescript@5.0.2)(zod@3.25.20)
+      abitype: 1.0.8(typescript@5.0.2)(zod@3.25.21)
       isows: 1.0.7(ws@8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10))
-      ox: 0.6.9(typescript@5.0.2)(zod@3.25.20)
+      ox: 0.6.9(typescript@5.0.2)(zod@3.25.21)
       ws: 8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     optionalDependencies:
       typescript: 5.0.2
@@ -7708,7 +7708,7 @@ snapshots:
 
   zod@3.24.1: {}
 
-  zod@3.25.20: {}
+  zod@3.25.21: {}
 
   zustand@5.0.5(@types/react@19.0.0)(react@19.0.0)(use-sync-external-store@1.5.0(react@19.0.0)):
     optionalDependencies:
