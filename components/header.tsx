@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import LoginButton from "@/components/login-button"
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false)
@@ -73,6 +74,7 @@ export default function Header() {
             </svg>
             <span className="sr-only">Follow on X</span>
           </a>
+          <LoginButton />
         </nav>
       </div>
     </header>
