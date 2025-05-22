@@ -15,14 +15,11 @@ export function Providers({ children }: PropsWithChildren) {
           logo: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/LogoTransparant-EFMqjstaAL9FZb6V7FEbMIIXa9gFEu.png",
         },
         embeddedWallets: {
-          // Disable Ethereum wallet creation
-          ethereum: {
-            createOnLogin: "off",
-          },
-          // Enable Solana wallet creation
+          createOnLogin: "off", // Turn off default Ethereum wallet creation
           solana: {
-            createOnLogin: "users-without-wallets",
+            createOnLogin: "users-without-wallets", // Enable Solana wallet creation
           },
+          noPromptOnSignature: false,
         },
         supportedWallets: [{ walletName: "phantom" }, { walletName: "solflare" }],
       }}
