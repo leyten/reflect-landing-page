@@ -8,21 +8,51 @@ import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token"
 
 export default function WalletDropdown() {
-  const { logout } = usePrivy()
-  const { wallets, ready: walletsReady } = useWallets()
+  const { logout, user, ready: privyReady } = usePrivy()
+  const { wallets, ready: walletsReady, createWallet } = useWallets()
   const [isOpen, setIsOpen] = useState(false)
   const [solBalance, setSolBalance] = useState<number | null>(null)
   const [usdcBalance, setUsdcBalance] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
+  const [debugInfo, setDebugInfo] = useState<string>("")
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Find the Solana embedded wallet
+  // Log wallet information for debugging
+  useEffect(() => {
+    if (walletsReady && wallets.length > 0) {
+      console.log("Available wallets:", wallets)
+      const info = wallets
+        .map(
+          (w) =>
+            `Type: ${w.walletClientType}, Chain: ${w.chain || "unknown"}, Address: ${w.address?.substring(0, 8)}...`,
+        )
+        .join("\n")
+      setDebugInfo(info)
+    }
+  }, [walletsReady, wallets])
+
+  // Find the Solana wallet
   const solanaWallet = wallets.find((wallet) => {
-    // Check if it's a Privy embedded wallet for Solana
-    return (
-      wallet.walletClientType === "privy" && wallet.chain === "solana" && wallet.address && wallet.address.length === 44
-    )
+    // Check for any Solana wallet
+    return wallet.address && wallet.address.length === 44
   })
+
+  // Create a Solana wallet if none exists
+  useEffect(() => {
+    const createSolanaWallet = async () => {
+      if (privyReady && walletsReady && wallets.length === 0 && createWallet) {
+        try {
+          console.log("Creating Solana wallet...")
+          await createWallet("privy", { chain: "solana" })
+          console.log("Solana wallet created successfully")
+        } catch (error) {
+          console.error("Error creating Solana wallet:", error)
+        }
+      }
+    }
+
+    createSolanaWallet()
+  }, [privyReady, walletsReady, wallets.length, createWallet])
 
   const walletAddress = solanaWallet?.address || ""
   const truncatedAddress = walletAddress
@@ -104,7 +134,20 @@ export default function WalletDropdown() {
     }
   }
 
-  if (!walletsReady) {
+  const handleCreateWallet = async () => {
+    if (createWallet) {
+      try {
+        setLoading(true)
+        await createWallet("privy", { chain: "solana" })
+      } catch (error) {
+        console.error("Error creating wallet:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+  }
+
+  if (!privyReady || !walletsReady) {
     return (
       <Button className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-lg px-4 py-2">
         <span className="animate-pulse">Loading wallet...</span>
@@ -155,78 +198,112 @@ export default function WalletDropdown() {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
           <div className="p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="text-gray-700 font-mono text-sm truncate flex-1">{walletAddress}</div>
-              <button onClick={copyToClipboard} className="text-gray-500 hover:text-gray-700" aria-label="Copy address">
-                <Copy className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 mb-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-green-500 text-xl">$</span>
-                  <span className="font-medium">USDC</span>
+            {walletAddress ? (
+              <>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="text-gray-700 font-mono text-sm truncate flex-1">{walletAddress}</div>
+                  <button
+                    onClick={copyToClipboard}
+                    className="text-gray-500 hover:text-gray-700"
+                    aria-label="Copy address"
+                  >
+                    <Copy className="h-5 w-5" />
+                  </button>
                 </div>
-                <span className="font-medium">
-                  {loading ? (
-                    <span className="inline-block w-16 h-5 bg-gray-200 animate-pulse rounded"></span>
-                  ) : (
-                    `$${usdcBalance?.toFixed(2) || "0.00"}`
-                  )}
-                </span>
-              </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-amber-500 text-xl">⊙</span>
-                  <span className="font-medium">SOL</span>
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-500 text-xl">$</span>
+                      <span className="font-medium">USDC</span>
+                    </div>
+                    <span className="font-medium">
+                      {loading ? (
+                        <span className="inline-block w-16 h-5 bg-gray-200 animate-pulse rounded"></span>
+                      ) : (
+                        `$${usdcBalance?.toFixed(2) || "0.00"}`
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-amber-500 text-xl">⊙</span>
+                      <span className="font-medium">SOL</span>
+                    </div>
+                    <span className="font-medium">
+                      {loading ? (
+                        <span className="inline-block w-20 h-5 bg-gray-200 animate-pulse rounded"></span>
+                      ) : (
+                        `${solBalance?.toFixed(4) || "0.0000"} SOL`
+                      )}
+                    </span>
+                  </div>
                 </div>
-                <span className="font-medium">
+
+                <div className="space-y-3">
+                  <button
+                    className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-md transition-colors"
+                    onClick={handleRefresh}
+                  >
+                    <RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
+                    <span>Refresh Balance</span>
+                  </button>
+
+                  <button
+                    className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-md transition-colors"
+                    onClick={() => {
+                      /* User settings functionality */
+                    }}
+                  >
+                    <Settings className="h-5 w-5" />
+                    <span>User Settings</span>
+                  </button>
+
+                  <button
+                    className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-md transition-colors"
+                    onClick={viewOnExplorer}
+                  >
+                    <ExternalLink className="h-5 w-5" />
+                    <span>View on Explorer</span>
+                  </button>
+
+                  <button
+                    className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 py-3 px-4 rounded-md transition-colors"
+                    onClick={logout}
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-gray-700">No Solana wallet found. Create one to continue.</p>
+                <button
+                  className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white py-3 px-4 rounded-md transition-colors"
+                  onClick={handleCreateWallet}
+                  disabled={loading}
+                >
                   {loading ? (
-                    <span className="inline-block w-20 h-5 bg-gray-200 animate-pulse rounded"></span>
+                    <span className="flex items-center gap-2">
+                      <RefreshCw className="h-5 w-5 animate-spin" />
+                      Creating...
+                    </span>
                   ) : (
-                    `${solBalance?.toFixed(4) || "0.0000"} SOL`
+                    <span>Create Solana Wallet</span>
                   )}
-                </span>
+                </button>
+
+                {/* Debug information */}
+                {debugInfo && (
+                  <div className="mt-4 p-2 bg-gray-100 rounded text-xs font-mono text-gray-700 whitespace-pre-wrap">
+                    <div className="font-bold mb-1">Debug Info:</div>
+                    {debugInfo}
+                  </div>
+                )}
               </div>
-            </div>
-
-            <div className="space-y-3">
-              <button
-                className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-md transition-colors"
-                onClick={handleRefresh}
-              >
-                <RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
-                <span>Refresh Balance</span>
-              </button>
-
-              <button
-                className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-md transition-colors"
-                onClick={() => {
-                  /* User settings functionality */
-                }}
-              >
-                <Settings className="h-5 w-5" />
-                <span>User Settings</span>
-              </button>
-
-              <button
-                className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-md transition-colors"
-                onClick={viewOnExplorer}
-              >
-                <ExternalLink className="h-5 w-5" />
-                <span>View on Explorer</span>
-              </button>
-
-              <button
-                className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 py-3 px-4 rounded-md transition-colors"
-                onClick={logout}
-              >
-                <LogOut className="h-5 w-5" />
-                <span>Logout</span>
-              </button>
-            </div>
+            )}
           </div>
         </div>
       )}
