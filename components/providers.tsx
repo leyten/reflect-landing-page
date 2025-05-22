@@ -15,7 +15,7 @@ export function Providers({ children }: PropsWithChildren) {
           logo: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/LogoTransparant-EFMqjstaAL9FZb6V7FEbMIIXa9gFEu.png",
         },
         embeddedWallets: {
-          createOnLogin: "all-users", // Create wallets for ALL users automatically
+          createOnLogin: "users-without-wallets", // Create wallets for users without them
           solana: {
             enabled: true,
           },

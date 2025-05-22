@@ -15,26 +15,45 @@ export default function WalletDropdown() {
   const [usdcBalance, setUsdcBalance] = useState<number | null>(1000) // Mocked for now
   const [loading, setLoading] = useState(false)
   const [creatingWallet, setCreatingWallet] = useState(false)
+  const [walletError, setWalletError] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Try to find a Solana wallet
+  // Log wallets for debugging
+  useEffect(() => {
+    if (walletsReady) {
+      console.log("Available wallets:", wallets)
+    }
+  }, [wallets, walletsReady])
+
+  // Check if user has any embedded wallet (not just Solana)
+  const hasAnyEmbeddedWallet = wallets.some((wallet) => wallet.walletClientType === "privy")
+
+  // Try to find a Solana wallet specifically
   const solanaWallet = wallets.find(
     (wallet) =>
       // Check for Solana in various ways since the API might vary
-      wallet.chain === "solana" || wallet.chainName === "solana" || (wallet.address && wallet.address.length === 44), // Solana addresses are 44 chars
+      wallet.chain === "solana" || wallet.chainName === "solana" || (wallet.address && wallet.address.length === 44),
   )
 
   // Automatically create a wallet if none exists and wallets are ready
   useEffect(() => {
     const autoCreateWallet = async () => {
-      if (walletsReady && !solanaWallet && !creatingWallet) {
+      // Only try to create a wallet if:
+      // 1. Wallets are ready
+      // 2. No Solana wallet is found
+      // 3. User doesn't have any embedded wallet at all (to avoid the error)
+      // 4. We're not already in the process of creating a wallet
+      // 5. We haven't encountered an error yet
+      if (walletsReady && !solanaWallet && !hasAnyEmbeddedWallet && !creatingWallet && !walletError) {
         try {
-          console.log("No Solana wallet found, creating one automatically...")
+          console.log("No embedded wallet found, creating one automatically...")
           setCreatingWallet(true)
           const wallet = await createWallet()
           console.log("Created wallet:", wallet)
         } catch (error) {
           console.error("Error creating wallet:", error)
+          // Store the error message but don't show it to the user
+          setWalletError(error instanceof Error ? error.message : "Failed to create wallet")
         } finally {
           setCreatingWallet(false)
         }
@@ -42,7 +61,7 @@ export default function WalletDropdown() {
     }
 
     autoCreateWallet()
-  }, [walletsReady, solanaWallet, createWallet, creatingWallet])
+  }, [walletsReady, solanaWallet, hasAnyEmbeddedWallet, createWallet, creatingWallet, walletError])
 
   const walletAddress = solanaWallet?.address || ""
   const truncatedAddress = walletAddress
@@ -96,10 +115,89 @@ export default function WalletDropdown() {
   }
 
   // If wallets aren't ready yet or we're creating a wallet, show loading
-  if (!walletsReady || creatingWallet || !solanaWallet) {
+  if (!walletsReady || creatingWallet) {
     return (
       <Button className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-full px-4 py-2 flex items-center gap-2">
         <span className="animate-pulse">Loading wallet...</span>
+      </Button>
+    )
+  }
+
+  // If we have wallets but no Solana wallet, show a generic wallet button
+  // This is a fallback in case the user has an embedded wallet but it's not a Solana wallet
+  if (!solanaWallet && hasAnyEmbeddedWallet) {
+    return (
+      <Button className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-full px-4 py-2 flex items-center gap-2">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="text-white"
+        >
+          <path
+            d="M18 8H6C4.89543 8 4 8.89543 4 10V16C4 17.1046 4.89543 18 6 18H18C19.1046 18 20 17.1046 20 16V10C20 8.89543 19.1046 8 18 8Z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M12 12C12.5523 12 13 11.5523 13 11C13 10.4477 12.5523 10 12 10C11.4477 10 11 10.4477 11 11C11 11.5523 11.4477 12 12 12Z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M16 8V6C16 4.89543 15.1046 4 14 4H10C8.89543 4 8 4.89543 8 6V8"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <span>Wallet</span>
+      </Button>
+    )
+  }
+
+  // If we have no wallet at all and encountered an error, show a generic wallet button
+  if (!solanaWallet && walletError) {
+    return (
+      <Button className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-full px-4 py-2 flex items-center gap-2">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="text-white"
+        >
+          <path
+            d="M18 8H6C4.89543 8 4 8.89543 4 10V16C4 17.1046 4.89543 18 6 18H18C19.1046 18 20 17.1046 20 16V10C20 8.89543 19.1046 8 18 8Z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M12 12C12.5523 12 13 11.5523 13 11C13 10.4477 12.5523 10 12 10C11.4477 10 11 10.4477 11 11C11 11.5523 11.4477 12 12 12Z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M16 8V6C16 4.89543 15.1046 4 14 4H10C8.89543 4 8 4.89543 8 6V8"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <span>Wallet</span>
       </Button>
     )
   }
