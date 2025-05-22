@@ -1,26 +1,53 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { usePrivy, useWallets } from "@privy-io/react-auth"
+import { usePrivy, useWallets, useCreateWallet } from "@privy-io/react-auth"
 import { Button } from "@/components/ui/button"
 import { ChevronDown, Copy, ExternalLink, LogOut, Settings } from "lucide-react"
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 
 export default function WalletDropdown() {
   const { user, logout } = usePrivy()
-  const { wallets } = useWallets()
+  const { wallets, ready: walletsReady } = useWallets()
+  const { createWallet } = useCreateWallet()
   const [isOpen, setIsOpen] = useState(false)
   const [solBalance, setSolBalance] = useState<number | null>(null)
   const [usdcBalance, setUsdcBalance] = useState<number | null>(1000) // Mocked for now
   const [loading, setLoading] = useState(false)
+  const [creatingWallet, setCreatingWallet] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Get the Solana embedded wallet
-  const solanaWallet = wallets.find((wallet) => wallet.walletClientType === "privy" && wallet.chain === "solana")
+  // Try to find a Solana wallet
+  const solanaWallet = wallets.find(
+    (wallet) =>
+      // Check for Solana in various ways since the API might vary
+      wallet.chain === "solana" || wallet.chainName === "solana" || (wallet.address && wallet.address.length === 44), // Solana addresses are 44 chars
+  )
+
+  // Automatically create a wallet if none exists and wallets are ready
+  useEffect(() => {
+    const autoCreateWallet = async () => {
+      if (walletsReady && !solanaWallet && !creatingWallet) {
+        try {
+          console.log("No Solana wallet found, creating one automatically...")
+          setCreatingWallet(true)
+          const wallet = await createWallet()
+          console.log("Created wallet:", wallet)
+        } catch (error) {
+          console.error("Error creating wallet:", error)
+        } finally {
+          setCreatingWallet(false)
+        }
+      }
+    }
+
+    autoCreateWallet()
+  }, [walletsReady, solanaWallet, createWallet, creatingWallet])
+
   const walletAddress = solanaWallet?.address || ""
   const truncatedAddress = walletAddress
     ? `${walletAddress.substring(0, 4)}...${walletAddress.substring(walletAddress.length - 4)}`
-    : "Connect"
+    : "Wallet"
 
   const fetchSolanaBalance = async (address: string) => {
     try {
@@ -66,6 +93,15 @@ export default function WalletDropdown() {
     if (walletAddress) {
       window.open(`https://explorer.solana.com/address/${walletAddress}`, "_blank")
     }
+  }
+
+  // If wallets aren't ready yet or we're creating a wallet, show loading
+  if (!walletsReady || creatingWallet || !solanaWallet) {
+    return (
+      <Button className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-full px-4 py-2 flex items-center gap-2">
+        <span className="animate-pulse">Loading wallet...</span>
+      </Button>
+    )
   }
 
   return (
