@@ -1,44 +1,54 @@
 "use client"
 
-import { usePrivy, useWallets } from "@privy-io/react-auth"
+import { usePrivy } from "@privy-io/react-auth"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Wallet, Copy, ExternalLink, RefreshCw } from "lucide-react"
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 
+interface SolanaWallet {
+  id: string
+  address: string
+  chainType: string
+  ownerId: string
+  createdAt: string
+}
+
 export default function WalletInfo() {
-  const { user, ready } = usePrivy()
-  const { wallets, ready: walletsReady } = useWallets()
+  const { user, ready: privyReady, authenticated } = usePrivy()
+  const [solanaWallets, setSolanaWallets] = useState<SolanaWallet[]>([])
   const [solanaBalances, setSolanaBalances] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(false)
+  const [fetchingWallets, setFetchingWallets] = useState(false)
 
-  // Find Solana wallets using multiple detection methods
-  const solanaWallets = wallets.filter((wallet) => {
-    // Check for explicit Solana chain type (based on API docs)
-    if (wallet.chainType === "solana") {
-      return true
+  // Fetch Solana wallets from our API route
+  const fetchSolanaWallets = async () => {
+    if (!authenticated || !user?.id) return
+
+    try {
+      setFetchingWallets(true)
+      const response = await fetch(`/api/wallets?userId=${user.id}`)
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch wallets: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log("WalletInfo - Fetched Solana wallets:", data.wallets)
+      setSolanaWallets(data.wallets || [])
+    } catch (error) {
+      console.error("Error fetching Solana wallets:", error)
+    } finally {
+      setFetchingWallets(false)
     }
+  }
 
-    // Check for other Solana indicators
-    if (wallet.chain === "solana" || wallet.chainName?.toLowerCase() === "solana") {
-      return true
-    }
-
-    // Check for Solana address format (base58 encoded, typically 44 characters)
-    if (wallet.address?.length === 44) {
-      return true
-    }
-
-    return false
-  })
-
-  // Log all wallets for debugging
+  // Fetch wallets when user is authenticated
   useEffect(() => {
-    if (walletsReady) {
-      console.log("WalletInfo - All wallets:", wallets)
-      console.log("WalletInfo - Solana wallets:", solanaWallets)
+    if (privyReady && authenticated && user?.id) {
+      fetchSolanaWallets()
     }
-  }, [wallets, solanaWallets, walletsReady])
+  }, [privyReady, authenticated, user])
 
   const fetchSolanaBalance = async (address: string) => {
     try {
@@ -74,16 +84,16 @@ export default function WalletInfo() {
   }
 
   useEffect(() => {
-    if (ready && walletsReady && solanaWallets.length > 0) {
+    if (solanaWallets.length > 0) {
       refreshBalances()
     }
-  }, [ready, walletsReady, solanaWallets])
+  }, [solanaWallets])
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
   }
 
-  if (!ready || !walletsReady) {
+  if (!privyReady || fetchingWallets) {
     return <div className="animate-pulse">Loading wallet information...</div>
   }
 
@@ -93,7 +103,7 @@ export default function WalletInfo() {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-zinc-800 font-medium">Your Solana Wallets</h3>
         </div>
-        <p className="text-zinc-600 mb-4">No Solana wallets connected yet.</p>
+        <p className="text-zinc-600 mb-4">No Solana wallets found. Please contact support.</p>
       </div>
     )
   }
@@ -116,12 +126,10 @@ export default function WalletInfo() {
 
       <div className="space-y-4">
         {solanaWallets.map((wallet) => (
-          <div key={wallet.address} className="border border-zinc-100 rounded-lg p-4">
+          <div key={wallet.id} className="border border-zinc-100 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <Wallet className="h-5 w-5 text-amber-500" />
-              <span className="font-medium text-zinc-800">
-                {wallet.walletClientType === "privy" ? "Embedded Wallet" : wallet.walletClientType}
-              </span>
+              <span className="font-medium text-zinc-800">Solana Wallet</span>
               <span className="bg-zinc-100 text-zinc-600 text-xs px-2 py-1 rounded-full">Solana</span>
             </div>
 
