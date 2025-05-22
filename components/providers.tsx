@@ -15,13 +15,9 @@ export function Providers({ children }: PropsWithChildren) {
           logo: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/LogoTransparant-EFMqjstaAL9FZb6V7FEbMIIXa9gFEu.png",
         },
         embeddedWallets: {
-          createOnLogin: "users-without-wallets", // Create wallets for users without them
+          createOnLogin: "users-without-wallets", // Let Privy handle wallet creation
           solana: {
             enabled: true,
-          },
-          // Explicitly disable Ethereum to ensure only Solana wallets are created
-          ethereum: {
-            enabled: false,
           },
         },
         supportedWallets: [{ walletName: "phantom" }, { walletName: "solflare" }],

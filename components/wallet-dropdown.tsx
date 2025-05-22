@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { usePrivy, useWallets, useCreateWallet } from "@privy-io/react-auth"
+import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { Button } from "@/components/ui/button"
 import { ChevronDown, Copy, ExternalLink, LogOut, Settings } from "lucide-react"
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
@@ -9,59 +9,58 @@ import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 export default function WalletDropdown() {
   const { user, logout } = usePrivy()
   const { wallets, ready: walletsReady } = useWallets()
-  const { createWallet } = useCreateWallet()
   const [isOpen, setIsOpen] = useState(false)
   const [solBalance, setSolBalance] = useState<number | null>(null)
   const [usdcBalance, setUsdcBalance] = useState<number | null>(1000) // Mocked for now
   const [loading, setLoading] = useState(false)
-  const [walletError, setWalletError] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const [attemptedWalletCreation, setAttemptedWalletCreation] = useState(false)
 
-  // Log wallets for debugging
+  // Log all wallets for debugging
   useEffect(() => {
     if (walletsReady) {
-      console.log("Connected wallets:", wallets)
+      console.log("All wallets:", wallets)
+
+      // Log details about each wallet to help with debugging
+      wallets.forEach((wallet, index) => {
+        console.log(`Wallet ${index + 1}:`, {
+          address: wallet.address,
+          type: wallet.walletClientType,
+          chain: wallet.chain,
+          chainName: wallet.chainName,
+          addressLength: wallet.address?.length,
+        })
+      })
     }
   }, [wallets, walletsReady])
 
-  // Find Solana wallets - prioritize explicit Solana wallets first
-  const solanaWallets = wallets.filter(
-    (wallet) =>
-      wallet.chain === "solana" ||
-      wallet.chainName?.toLowerCase() === "solana" ||
-      (wallet.walletClientType === "privy" && wallet.address?.length === 44),
-  )
+  // Find Solana wallets - try multiple detection methods
+  const solanaWallets = wallets.filter((wallet) => {
+    // Check for explicit Solana chain type
+    if (wallet.chain === "solana" || wallet.chainName?.toLowerCase() === "solana") {
+      return true
+    }
+
+    // Check for Solana address format (base58 encoded, typically 44 characters)
+    if (wallet.address?.length === 44) {
+      return true
+    }
+
+    return false
+  })
+
+  // Log Solana wallets specifically
+  useEffect(() => {
+    if (walletsReady && solanaWallets.length > 0) {
+      console.log("Detected Solana wallets:", solanaWallets)
+    }
+  }, [solanaWallets, walletsReady])
 
   // Get the primary Solana wallet to display
   const solanaWallet = solanaWallets.length > 0 ? solanaWallets[0] : null
 
-  // Only attempt to create a wallet once and only if truly needed
-  useEffect(() => {
-    const checkAndCreateWalletIfNeeded = async () => {
-      // Only proceed if:
-      // 1. Wallets are ready
-      // 2. We haven't attempted wallet creation yet
-      // 3. No Solana wallets exist
-      if (walletsReady && !attemptedWalletCreation && solanaWallets.length === 0) {
-        try {
-          setAttemptedWalletCreation(true)
-          console.log("No Solana wallets found, creating one automatically...")
-          const wallet = await createWallet({
-            solana: true,
-          })
-          console.log("Created Solana wallet:", wallet)
-        } catch (error) {
-          console.error("Error creating Solana wallet:", error)
-          setWalletError(error instanceof Error ? error.message : "Failed to create wallet")
-        }
-      }
-    }
-
-    checkAndCreateWalletIfNeeded()
-  }, [walletsReady, solanaWallets, createWallet, attemptedWalletCreation])
-
-  const walletAddress = solanaWallet?.address || ""
+  // Fallback to any wallet if no Solana wallet is found
+  const displayWallet = solanaWallet || (wallets.length > 0 ? wallets[0] : null)
+  const walletAddress = displayWallet?.address || ""
   const truncatedAddress = walletAddress
     ? `${walletAddress.substring(0, 4)}...${walletAddress.substring(walletAddress.length - 4)}`
     : "Wallet"
@@ -108,7 +107,12 @@ export default function WalletDropdown() {
 
   const viewOnExplorer = () => {
     if (walletAddress) {
-      window.open(`https://explorer.solana.com/address/${walletAddress}`, "_blank")
+      // Determine if it's likely a Solana address (44 chars) or Ethereum address
+      const explorerUrl =
+        walletAddress.length === 44
+          ? `https://explorer.solana.com/address/${walletAddress}`
+          : `https://etherscan.io/address/${walletAddress}`
+      window.open(explorerUrl, "_blank")
     }
   }
 
@@ -120,8 +124,11 @@ export default function WalletDropdown() {
     buttonLabel = "Wallet"
   }
 
-  // Determine if we have a usable Solana wallet
-  const hasSolanaWallet = !!solanaWallet
+  // Determine if we have a usable wallet
+  const hasWallet = !!displayWallet
+
+  // Determine if the displayed wallet is a Solana wallet
+  const isSolanaWallet = solanaWallet && displayWallet?.address === solanaWallet.address
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -167,8 +174,15 @@ export default function WalletDropdown() {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
           <div className="p-4">
-            {hasSolanaWallet ? (
+            {hasWallet ? (
               <>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-medium text-gray-500">{isSolanaWallet ? "Solana Wallet" : "Wallet"}</div>
+                  {!isSolanaWallet && (
+                    <div className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full">Not a Solana wallet</div>
+                  )}
+                </div>
+
                 <div className="flex items-center gap-2 mb-4">
                   <div className="text-gray-700 font-mono text-sm truncate flex-1">{walletAddress}</div>
                   <button
@@ -180,25 +194,27 @@ export default function WalletDropdown() {
                   </button>
                 </div>
 
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-green-500 text-xl">$</span>
-                      <span className="font-medium">USDC</span>
+                {isSolanaWallet && (
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-500 text-xl">$</span>
+                        <span className="font-medium">USDC</span>
+                      </div>
+                      <span className="font-medium">${usdcBalance?.toFixed(2) || "0.00"}</span>
                     </div>
-                    <span className="font-medium">${usdcBalance?.toFixed(2) || "0.00"}</span>
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-amber-500 text-xl">⊙</span>
-                      <span className="font-medium">SOL</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-amber-500 text-xl">⊙</span>
+                        <span className="font-medium">SOL</span>
+                      </div>
+                      <span className="font-medium">
+                        {loading ? "Loading..." : `${solBalance?.toFixed(4) || "0.0000"} SOL`}
+                      </span>
                     </div>
-                    <span className="font-medium">
-                      {loading ? "Loading..." : `${solBalance?.toFixed(4) || "0.0000"} SOL`}
-                    </span>
                   </div>
-                </div>
+                )}
 
                 <div className="space-y-3">
                   <button
@@ -223,11 +239,9 @@ export default function WalletDropdown() {
             ) : (
               <div className="py-2 text-center text-gray-500 mb-4">
                 {!walletsReady ? (
-                  <p>Loading your Solana wallet...</p>
-                ) : walletError ? (
-                  <p>There was an issue with your Solana wallet. Please try again later.</p>
+                  <p>Loading your wallet...</p>
                 ) : (
-                  <p>No Solana wallet found. Please refresh the page or try again later.</p>
+                  <p>No wallet found. Please refresh the page or try again later.</p>
                 )}
               </div>
             )}
