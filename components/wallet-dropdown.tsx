@@ -15,33 +15,43 @@ export default function WalletDropdown() {
   const [loading, setLoading] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Log all wallets for debugging
+  // Log all wallets for debugging with detailed properties
   useEffect(() => {
     if (walletsReady) {
       console.log("All wallets:", wallets)
 
       // Log details about each wallet to help with debugging
       wallets.forEach((wallet, index) => {
-        console.log(`Wallet ${index + 1}:`, {
+        console.log(`Wallet ${index + 1} details:`, {
           address: wallet.address,
           type: wallet.walletClientType,
           chain: wallet.chain,
           chainName: wallet.chainName,
+          chainType: wallet.chainType, // This might be the key property based on the API docs
           addressLength: wallet.address?.length,
+          // Log all properties to see what's available
+          allProps: { ...wallet },
         })
       })
     }
   }, [wallets, walletsReady])
 
-  // Find Solana wallets - try multiple detection methods
+  // Find Solana wallets using multiple detection methods
   const solanaWallets = wallets.filter((wallet) => {
-    // Check for explicit Solana chain type
+    // Check for explicit Solana chain type (based on API docs)
+    if (wallet.chainType === "solana") {
+      return true
+    }
+
+    // Check for other Solana indicators
     if (wallet.chain === "solana" || wallet.chainName?.toLowerCase() === "solana") {
       return true
     }
 
     // Check for Solana address format (base58 encoded, typically 44 characters)
     if (wallet.address?.length === 44) {
+      // Additional check: Solana addresses typically start with specific characters
+      // This is a heuristic and not foolproof
       return true
     }
 
@@ -50,20 +60,22 @@ export default function WalletDropdown() {
 
   // Log Solana wallets specifically
   useEffect(() => {
-    if (walletsReady && solanaWallets.length > 0) {
+    if (walletsReady) {
       console.log("Detected Solana wallets:", solanaWallets)
+      console.log("Total wallets:", wallets.length)
+      console.log("Solana wallets:", solanaWallets.length)
     }
-  }, [solanaWallets, walletsReady])
+  }, [solanaWallets, wallets, walletsReady])
 
-  // Get the primary Solana wallet to display
-  const solanaWallet = solanaWallets.length > 0 ? solanaWallets[0] : null
-
-  // Fallback to any wallet if no Solana wallet is found
-  const displayWallet = solanaWallet || (wallets.length > 0 ? wallets[0] : null)
+  // Get the primary wallet to display - prioritize Solana wallets
+  const displayWallet = solanaWallets.length > 0 ? solanaWallets[0] : wallets.length > 0 ? wallets[0] : null
   const walletAddress = displayWallet?.address || ""
   const truncatedAddress = walletAddress
     ? `${walletAddress.substring(0, 4)}...${walletAddress.substring(walletAddress.length - 4)}`
     : "Wallet"
+
+  // Determine if the displayed wallet is a Solana wallet
+  const isSolanaWallet = solanaWallets.includes(displayWallet)
 
   const fetchSolanaBalance = async (address: string) => {
     try {
@@ -81,10 +93,10 @@ export default function WalletDropdown() {
   }
 
   useEffect(() => {
-    if (solanaWallet?.address) {
-      fetchSolanaBalance(solanaWallet.address)
+    if (isSolanaWallet && displayWallet?.address) {
+      fetchSolanaBalance(displayWallet.address)
     }
-  }, [solanaWallet])
+  }, [displayWallet, isSolanaWallet])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -107,11 +119,10 @@ export default function WalletDropdown() {
 
   const viewOnExplorer = () => {
     if (walletAddress) {
-      // Determine if it's likely a Solana address (44 chars) or Ethereum address
-      const explorerUrl =
-        walletAddress.length === 44
-          ? `https://explorer.solana.com/address/${walletAddress}`
-          : `https://etherscan.io/address/${walletAddress}`
+      // Determine the correct explorer based on wallet type
+      const explorerUrl = isSolanaWallet
+        ? `https://explorer.solana.com/address/${walletAddress}`
+        : `https://etherscan.io/address/${walletAddress}`
       window.open(explorerUrl, "_blank")
     }
   }
@@ -126,9 +137,6 @@ export default function WalletDropdown() {
 
   // Determine if we have a usable wallet
   const hasWallet = !!displayWallet
-
-  // Determine if the displayed wallet is a Solana wallet
-  const isSolanaWallet = solanaWallet && displayWallet?.address === solanaWallet.address
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -177,9 +185,11 @@ export default function WalletDropdown() {
             {hasWallet ? (
               <>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm font-medium text-gray-500">{isSolanaWallet ? "Solana Wallet" : "Wallet"}</div>
+                  <div className="text-sm font-medium text-gray-500">
+                    {isSolanaWallet ? "Solana Wallet" : "Ethereum Wallet"}
+                  </div>
                   {!isSolanaWallet && (
-                    <div className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full">Not a Solana wallet</div>
+                    <div className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full">Not Solana</div>
                   )}
                 </div>
 
