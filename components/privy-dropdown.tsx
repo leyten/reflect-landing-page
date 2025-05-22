@@ -4,14 +4,22 @@ import { usePrivy } from "@privy-io/react-auth"
 import { useSolanaWallets } from "@privy-io/react-auth/solana"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Wallet, ChevronDown, Copy, Check, Settings, ExternalLink, LogOut } from "lucide-react"
+import { Wallet, ChevronDown, Copy, Check, Settings, ExternalLink, LogOut, RefreshCw } from "lucide-react"
 import { useState } from "react"
 import Link from "next/link"
+import { useWalletBalances } from "@/hooks/use-wallet-balances"
 
 export default function PrivyDropdown() {
   const { ready, authenticated, user, login, logout } = usePrivy()
   const { wallets, ready: walletsReady } = useSolanaWallets()
   const [copySuccess, setCopySuccess] = useState(false)
+
+  const primaryWallet = wallets[0]
+  const { sol, tokens, isLoading, error, refetch } = useWalletBalances(primaryWallet?.address)
+
+  // Find USDC token balance
+  const usdcToken = tokens.find((token) => token.symbol === "USDC")
+  const usdcBalance = usdcToken?.uiBalance || 0
 
   const formatAddress = (address: string) => {
     return `${address.slice(0, 4)}...${address.slice(-4)}`
@@ -61,8 +69,6 @@ export default function PrivyDropdown() {
     )
   }
 
-  const primaryWallet = wallets[0]
-
   return (
     <div className="fixed-width-container">
       <DropdownMenu>
@@ -99,21 +105,43 @@ export default function PrivyDropdown() {
             </div>
           </div>
 
-          <div className="p-4 border-b space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <span className="text-green-600 mr-2">$</span>
-                <span className="text-sm">USDC</span>
-              </div>
-              <span className="text-sm font-medium">$1000.00</span>
+          <div className="p-4 border-b">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium">Balances</span>
+              <button
+                onClick={() => refetch()}
+                className="p-1 hover:bg-gray-100 rounded focus:outline-none"
+                disabled={isLoading}
+                title="Refresh balances"
+              >
+                <RefreshCw className={`w-4 h-4 text-gray-500 ${isLoading ? "animate-spin" : ""}`} />
+              </button>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <span className="text-yellow-500 mr-2">◎</span>
-                <span className="text-sm">SOL</span>
+
+            {error ? (
+              <div className="text-xs text-red-500 mb-2">Error loading balances</div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <span className="text-green-600 mr-2">$</span>
+                    <span className="text-sm">USDC</span>
+                  </div>
+                  <span className="text-sm font-medium">
+                    {isLoading ? <span className="text-gray-400">Loading...</span> : `$${usdcBalance.toFixed(2)}`}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <span className="text-yellow-500 mr-2">◎</span>
+                    <span className="text-sm">SOL</span>
+                  </div>
+                  <span className="text-sm font-medium">
+                    {isLoading ? <span className="text-gray-400">Loading...</span> : `${sol.toFixed(4)} SOL`}
+                  </span>
+                </div>
               </div>
-              <span className="text-sm font-medium">0.0018 SOL</span>
-            </div>
+            )}
           </div>
 
           <div className="p-4 space-y-2">
