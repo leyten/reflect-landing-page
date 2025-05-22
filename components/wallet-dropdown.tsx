@@ -8,6 +8,7 @@ import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 
 export default function WalletDropdown() {
   const { user, logout } = usePrivy()
+  // Use the wallets array from useWallets as shown in the documentation
   const { wallets, ready: walletsReady } = useWallets()
   const { createWallet } = useCreateWallet()
   const [isOpen, setIsOpen] = useState(false)
@@ -21,32 +22,29 @@ export default function WalletDropdown() {
   // Log wallets for debugging
   useEffect(() => {
     if (walletsReady) {
-      console.log("Available wallets:", wallets)
+      console.log("Connected wallets:", wallets)
     }
   }, [wallets, walletsReady])
 
-  // Check if user has any embedded wallet (not just Solana)
-  const hasAnyEmbeddedWallet = wallets.some((wallet) => wallet.walletClientType === "privy")
-
-  // Try to find a Solana wallet specifically
-  const solanaWallet = wallets.find(
-    (wallet) =>
-      // Check for Solana in various ways since the API might vary
-      wallet.chain === "solana" || wallet.chainName === "solana" || (wallet.address && wallet.address.length === 44),
-  )
+  // Find the first Solana wallet (embedded or external)
+  const solanaWallet = wallets.find((wallet) => {
+    // Check if it's a Solana wallet
+    return (
+      wallet.chain === "solana" || wallet.chainName === "solana" || (wallet.address && wallet.address.length === 44)
+    )
+  })
 
   // Automatically create a wallet if none exists and wallets are ready
   useEffect(() => {
     const autoCreateWallet = async () => {
       // Only try to create a wallet if:
       // 1. Wallets are ready
-      // 2. No Solana wallet is found
-      // 3. User doesn't have any embedded wallet at all (to avoid the error)
-      // 4. We're not already in the process of creating a wallet
-      // 5. We haven't encountered an error yet
-      if (walletsReady && !solanaWallet && !hasAnyEmbeddedWallet && !creatingWallet && !walletError) {
+      // 2. No wallets are found
+      // 3. We're not already in the process of creating a wallet
+      // 4. We haven't encountered an error yet
+      if (walletsReady && wallets.length === 0 && !creatingWallet && !walletError) {
         try {
-          console.log("No embedded wallet found, creating one automatically...")
+          console.log("No wallets found, creating one automatically...")
           setCreatingWallet(true)
           const wallet = await createWallet()
           console.log("Created wallet:", wallet)
@@ -61,7 +59,7 @@ export default function WalletDropdown() {
     }
 
     autoCreateWallet()
-  }, [walletsReady, solanaWallet, hasAnyEmbeddedWallet, createWallet, creatingWallet, walletError])
+  }, [walletsReady, wallets, createWallet, creatingWallet, walletError])
 
   const walletAddress = solanaWallet?.address || ""
   const truncatedAddress = walletAddress
@@ -114,92 +112,14 @@ export default function WalletDropdown() {
     }
   }
 
-  // If wallets aren't ready yet or we're creating a wallet, show loading
-  if (!walletsReady || creatingWallet) {
-    return (
-      <Button className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-full px-4 py-2 flex items-center gap-2">
-        <span className="animate-pulse">Loading wallet...</span>
-      </Button>
-    )
-  }
-
-  // If we have wallets but no Solana wallet, show a generic wallet button
-  // This is a fallback in case the user has an embedded wallet but it's not a Solana wallet
-  if (!solanaWallet && hasAnyEmbeddedWallet) {
-    return (
-      <Button className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-full px-4 py-2 flex items-center gap-2">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="text-white"
-        >
-          <path
-            d="M18 8H6C4.89543 8 4 8.89543 4 10V16C4 17.1046 4.89543 18 6 18H18C19.1046 18 20 17.1046 20 16V10C20 8.89543 19.1046 8 18 8Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M12 12C12.5523 12 13 11.5523 13 11C13 10.4477 12.5523 10 12 10C11.4477 10 11 10.4477 11 11C11 11.5523 11.4477 12 12 12Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M16 8V6C16 4.89543 15.1046 4 14 4H10C8.89543 4 8 4.89543 8 6V8"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-        <span>Wallet</span>
-      </Button>
-    )
-  }
-
-  // If we have no wallet at all and encountered an error, show a generic wallet button
-  if (!solanaWallet && walletError) {
-    return (
-      <Button className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-full px-4 py-2 flex items-center gap-2">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="text-white"
-        >
-          <path
-            d="M18 8H6C4.89543 8 4 8.89543 4 10V16C4 17.1046 4.89543 18 6 18H18C19.1046 18 20 17.1046 20 16V10C20 8.89543 19.1046 8 18 8Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M12 12C12.5523 12 13 11.5523 13 11C13 10.4477 12.5523 10 12 10C11.4477 10 11 10.4477 11 11C11 11.5523 11.4477 12 12 12Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M16 8V6C16 4.89543 15.1046 4 14 4H10C8.89543 4 8 4.89543 8 6V8"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-        <span>Wallet</span>
-      </Button>
-    )
+  // Determine the button label based on state
+  let buttonLabel = truncatedAddress
+  if (creatingWallet) {
+    buttonLabel = "Creating wallet..."
+  } else if (!walletsReady) {
+    buttonLabel = "Loading wallet..."
+  } else if (!solanaWallet) {
+    buttonLabel = "Wallet"
   }
 
   return (
@@ -207,6 +127,7 @@ export default function WalletDropdown() {
       <Button
         onClick={() => setIsOpen(!isOpen)}
         className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-full px-4 py-2 flex items-center gap-2"
+        disabled={creatingWallet || !walletsReady}
       >
         <svg
           width="20"
@@ -238,67 +159,86 @@ export default function WalletDropdown() {
             strokeLinejoin="round"
           />
         </svg>
-        <span>{truncatedAddress}</span>
+        <span className={creatingWallet || !walletsReady ? "animate-pulse" : ""}>{buttonLabel}</span>
         <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </Button>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
           <div className="p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="text-gray-700 font-mono text-sm truncate flex-1">{walletAddress}</div>
-              <button onClick={copyToClipboard} className="text-gray-500 hover:text-gray-700" aria-label="Copy address">
-                <Copy className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 mb-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-green-500 text-xl">$</span>
-                  <span className="font-medium">USDC</span>
+            {solanaWallet ? (
+              <>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="text-gray-700 font-mono text-sm truncate flex-1">{walletAddress}</div>
+                  <button
+                    onClick={copyToClipboard}
+                    className="text-gray-500 hover:text-gray-700"
+                    aria-label="Copy address"
+                  >
+                    <Copy className="h-5 w-5" />
+                  </button>
                 </div>
-                <span className="font-medium">${usdcBalance?.toFixed(2) || "0.00"}</span>
-              </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-amber-500 text-xl">⊙</span>
-                  <span className="font-medium">SOL</span>
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-500 text-xl">$</span>
+                      <span className="font-medium">USDC</span>
+                    </div>
+                    <span className="font-medium">${usdcBalance?.toFixed(2) || "0.00"}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-amber-500 text-xl">⊙</span>
+                      <span className="font-medium">SOL</span>
+                    </div>
+                    <span className="font-medium">
+                      {loading ? "Loading..." : `${solBalance?.toFixed(4) || "0.0000"} SOL`}
+                    </span>
+                  </div>
                 </div>
-                <span className="font-medium">
-                  {loading ? "Loading..." : `${solBalance?.toFixed(4) || "0.0000"} SOL`}
-                </span>
+
+                <div className="space-y-3">
+                  <button
+                    className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-md transition-colors"
+                    onClick={() => {
+                      /* User settings functionality */
+                    }}
+                  >
+                    <Settings className="h-5 w-5" />
+                    <span>User Settings</span>
+                  </button>
+
+                  <button
+                    className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-md transition-colors"
+                    onClick={viewOnExplorer}
+                  >
+                    <ExternalLink className="h-5 w-5" />
+                    <span>View on Explorer</span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="py-2 text-center text-gray-500 mb-4">
+                {creatingWallet ? (
+                  <p>Creating your wallet...</p>
+                ) : walletError ? (
+                  <p>There was an issue with your wallet. Please try again later.</p>
+                ) : (
+                  <p>No wallet found. One will be created for you automatically.</p>
+                )}
               </div>
-            </div>
+            )}
 
-            <div className="space-y-3">
-              <button
-                className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-md transition-colors"
-                onClick={() => {
-                  /* User settings functionality */
-                }}
-              >
-                <Settings className="h-5 w-5" />
-                <span>User Settings</span>
-              </button>
-
-              <button
-                className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-4 rounded-md transition-colors"
-                onClick={viewOnExplorer}
-              >
-                <ExternalLink className="h-5 w-5" />
-                <span>View on Explorer</span>
-              </button>
-
-              <button
-                className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 py-3 px-4 rounded-md transition-colors"
-                onClick={logout}
-              >
-                <LogOut className="h-5 w-5" />
-                <span>Logout</span>
-              </button>
-            </div>
+            {/* Always show logout button */}
+            <button
+              className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 py-3 px-4 rounded-md transition-colors mt-3"
+              onClick={logout}
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Logout</span>
+            </button>
           </div>
         </div>
       )}
