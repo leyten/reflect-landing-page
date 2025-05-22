@@ -9,10 +9,13 @@ import Footer from "@/components/footer"
 import AnimatedSection from "@/components/animated-section"
 import PartnersMarquee from "@/components/partners-marquee"
 import { useState } from "react"
+// Import the useWaitlist hook at the top of the file
+import { useWaitlist } from "@/context/waitlist-context"
 
 export default function Home() {
   const changingWords = ["smarter", "better", "clearer", "calmer"]
   const [timeframe, setTimeframe] = useState("day")
+  const { showWaitlistModal } = useWaitlist() // Add this line
 
   const dashboardData = {
     day: {
@@ -199,30 +202,9 @@ export default function Home() {
                     <div className="flex flex-col sm:flex-row gap-4 mt-2">
                       <Button
                         className="bg-black text-white hover:bg-black/90 rounded-full px-6 py-5 text-sm font-medium"
-                        asChild
+                        onClick={showWaitlistModal} // Change this line
                       >
-                        <a
-                          href="https://x.com/use_reflect"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M4 4l11.733 16h4.267l-11.733 -16z" />
-                            <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" />
-                          </svg>
-                          Follow for Updates
-                        </a>
+                        Join Waitlist
                       </Button>
                     </div>
                   </div>

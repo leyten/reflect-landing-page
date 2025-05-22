@@ -4,9 +4,12 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import PrivyDropdown from "./privy-dropdown"
+// Import the useWaitlist hook
+import { useWaitlist } from "@/context/waitlist-context"
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false)
+  const { showWaitlistModal } = useWaitlist() // Add this line
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,6 +55,12 @@ export default function Header() {
           >
             FAQ
           </Link>
+          <button
+            onClick={showWaitlistModal}
+            className="text-zinc-800 hover:text-black font-medium text-sm tracking-wide transition-colors duration-300"
+          >
+            Join Waitlist
+          </button>
           <a
             href="https://x.com/use_reflect"
             target="_blank"

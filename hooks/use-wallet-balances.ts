@@ -40,7 +40,7 @@ export function useWalletBalances(address: string | undefined): WalletBalances {
 
     try {
       // Connect to Solana mainnet
-      const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed")
+      const connection = new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC_URL!, "confirmed")
       const publicKey = new PublicKey(address)
 
       // Fetch SOL balance
