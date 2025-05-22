@@ -1,12 +1,9 @@
 "use client"
 
 import { PrivyProvider } from "@privy-io/react-auth"
-import { useRouter } from "next/navigation"
 import type { PropsWithChildren } from "react"
 
 export function Providers({ children }: PropsWithChildren) {
-  const router = useRouter()
-
   return (
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
@@ -23,7 +20,6 @@ export function Providers({ children }: PropsWithChildren) {
         },
         supportedWallets: [{ walletName: "phantom" }, { walletName: "solflare" }],
       }}
-      onSuccess={() => router.push("/dashboard")}
     >
       {children}
     </PrivyProvider>
