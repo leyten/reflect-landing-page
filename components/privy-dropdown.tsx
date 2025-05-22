@@ -8,7 +8,7 @@ import { Wallet, ChevronDown, Copy, Check, Settings, ExternalLink, LogOut } from
 import { useState } from "react"
 import Link from "next/link"
 
-export function PrivyDropdown() {
+export default function PrivyDropdown() {
   const { ready, authenticated, user, login, logout } = usePrivy()
   const { wallets, ready: walletsReady } = useSolanaWallets()
   const [copySuccess, setCopySuccess] = useState(false)

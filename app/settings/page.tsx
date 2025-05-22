@@ -1,6 +1,6 @@
 "use client"
 
-import { usePrivy, useWallets } from "@privy-io/react-auth"
+import { usePrivy } from "@privy-io/react-auth"
 import { useSolanaWallets } from "@privy-io/react-auth/solana"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,9 +11,8 @@ import { Settings, Wallet, Key, Copy, Check, ExternalLink, User, Mail, Shield, A
 import Link from "next/link"
 
 export default function SettingsPage() {
-  const { user, logout, exportWallet, linkWallet, unlinkWallet } = usePrivy()
-  const { wallets } = useWallets()
-  const { wallets: solanaWallets } = useSolanaWallets()
+  const { user, logout, linkWallet, unlinkWallet } = usePrivy()
+  const { wallets: solanaWallets, exportWallet: exportSolWallet } = useSolanaWallets()
   const [showPrivateKey, setShowPrivateKey] = useState<string | null>(null)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [exportingWallet, setExportingWallet] = useState<string | null>(null)
@@ -35,12 +34,28 @@ export default function SettingsPage() {
   const handleExportWallet = async (walletAddress: string) => {
     try {
       setExportingWallet(walletAddress)
-      const privateKey = await exportWallet()
-      setShowPrivateKey(privateKey)
+
+      // Find the Solana wallet
+      const wallet = solanaWallets.find((w) => w.address === walletAddress)
+      if (!wallet) throw new Error("Wallet not found")
+
+      // Export Solana wallet private key
+      const privateKey = await exportSolWallet(wallet)
+
     } catch (error) {
       console.error("Failed to export wallet:", error)
+      alert("Failed to export wallet. Please try again.")
     } finally {
       setExportingWallet(null)
+    }
+  }
+
+  const handleUnlinkWallet = async (walletAddress: string) => {
+    try {
+      await unlinkWallet(walletAddress)
+    } catch (error) {
+      console.error("Failed to unlink wallet:", error)
+      alert("Failed to unlink wallet. Please try again.")
     }
   }
 
@@ -133,93 +148,53 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Wallet className="w-5 h-5 mr-2" />
-                Wallet Management
+                Solana Wallet Management
               </CardTitle>
-              <CardDescription>Manage your connected wallets and export private keys</CardDescription>
+              <CardDescription>Manage your Solana wallets and export private keys</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {/* EVM Wallets */}
-                {wallets.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-700 mb-2">Ethereum Wallets</h4>
-                    {wallets.map((wallet) => (
-                      <div key={wallet.address} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <Badge variant={wallet.walletClientType === "privy" ? "default" : "secondary"}>
-                              {wallet.walletClientType === "privy" ? "Embedded" : "External"}
-                            </Badge>
-                            <span className="font-mono text-sm">{formatAddress(wallet.address)}</span>
-                          </div>
-                          <Button size="sm" variant="outline" onClick={() => openSolanaExplorer(wallet.address)}>
-                            <ExternalLink className="w-3 h-3" />
-                          </Button>
+                {/* Solana Wallets */}
+                {solanaWallets.length > 0 ? (
+                  solanaWallets.map((wallet) => (
+                    <div key={wallet.address} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Badge variant={wallet.walletClientType === "privy" ? "default" : "secondary"}>
+                            {wallet.walletClientType === "privy" ? "Embedded" : "External"}
+                          </Badge>
+                          <span className="font-mono text-sm">{formatAddress(wallet.address)}</span>
                         </div>
+                        <Button size="sm" variant="outline" onClick={() => openSolanaExplorer(wallet.address)}>
+                          <ExternalLink className="w-3 h-3" />
+                        </Button>
+                      </div>
 
-                        <div className="flex space-x-2">
-                          {wallet.walletClientType === "privy" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleExportWallet(wallet.address)}
-                              disabled={exportingWallet === wallet.address}
-                              className="flex items-center"
-                            >
-                              <Key className="w-3 h-3 mr-1" />
-                              {exportingWallet === wallet.address ? "Exporting..." : "Export Private Key"}
-                            </Button>
-                          )}
-                          <Button size="sm" variant="destructive" onClick={() => unlinkWallet(wallet.address)}>
+                      <div className="flex space-x-2">
+                        {wallet.walletClientType === "privy" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleExportWallet(wallet.address)}
+                            disabled={exportingWallet === wallet.address}
+                            className="flex items-center"
+                          >
+                            <Key className="w-3 h-3 mr-1" />
+                            {exportingWallet === wallet.address ? "Exporting..." : "Export Private Key"}
+                          </Button>
+                        )}
+                        {wallet.walletClientType !== "privy" && (
+                          <Button size="sm" variant="destructive" onClick={() => handleUnlinkWallet(wallet.address)}>
                             Unlink
                           </Button>
-                        </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Solana Wallets */}
-                {solanaWallets.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-700 mb-2">Solana Wallets</h4>
-                    {solanaWallets.map((wallet) => (
-                      <div key={wallet.address} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <Badge variant={wallet.walletClientType === "privy" ? "default" : "secondary"}>
-                              {wallet.walletClientType === "privy" ? "Embedded" : "External"}
-                            </Badge>
-                            <span className="font-mono text-sm">{formatAddress(wallet.address)}</span>
-                          </div>
-                          <Button size="sm" variant="outline" onClick={() => openSolanaExplorer(wallet.address)}>
-                            <ExternalLink className="w-3 h-3" />
-                          </Button>
-                        </div>
-
-                        <div className="flex space-x-2">
-                          {wallet.walletClientType === "privy" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleExportWallet(wallet.address)}
-                              disabled={exportingWallet === wallet.address}
-                              className="flex items-center"
-                            >
-                              <Key className="w-3 h-3 mr-1" />
-                              {exportingWallet === wallet.address ? "Exporting..." : "Export Private Key"}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {wallets.length === 0 && solanaWallets.length === 0 && (
+                    </div>
+                  ))
+                ) : (
                   <div className="text-center py-8 text-gray-500">
                     <Wallet className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>No wallets connected</p>
+                    <p>No Solana wallets connected</p>
                     <Button variant="outline" className="mt-4" onClick={() => linkWallet()}>
                       Connect Wallet
                     </Button>
