@@ -4,6 +4,7 @@ import { usePrivy } from "@privy-io/react-auth"
 import { Button } from "@/components/ui/button"
 import { LogIn, LogOut, User } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function LoginButton() {
   const { login, logout, authenticated, user } = usePrivy()
@@ -18,8 +19,20 @@ export default function LoginButton() {
           asChild
         >
           <Link href="/dashboard">
-            <User className="h-4 w-4" />
-            <span className="hidden md:inline">Dashboard</span>
+            {user.twitter?.profileImageUrl ? (
+              <Image
+                src={user.twitter.profileImageUrl || "/placeholder.svg"}
+                alt="Profile"
+                width={20}
+                height={20}
+                className="rounded-full"
+              />
+            ) : (
+              <User className="h-4 w-4" />
+            )}
+            <span className="hidden md:inline">
+              {user.twitter?.username || user.email?.address?.split("@")[0] || "Dashboard"}
+            </span>
           </Link>
         </Button>
         <Button

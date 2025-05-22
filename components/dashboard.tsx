@@ -8,6 +8,7 @@ import Footer from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Settings, BarChart3, Activity, Calendar } from "lucide-react"
 import Link from "next/link"
+import WalletInfo from "@/components/wallet-info"
 
 export default function Dashboard() {
   const { ready, authenticated, user } = usePrivy()
@@ -41,7 +42,9 @@ export default function Dashboard() {
                   Back to Home
                 </Link>
               </Button>
-              <h1 className="text-3xl font-medium text-zinc-900">Welcome, {user?.email?.address || "Trader"}</h1>
+              <h1 className="text-3xl font-medium text-zinc-900">
+                Welcome, {user?.email?.address || user?.twitter?.username || "Trader"}
+              </h1>
               <p className="text-zinc-500 mt-1">Here's your trading psychology overview</p>
             </div>
             <Button variant="outline" size="sm" className="flex items-center gap-2">
@@ -77,6 +80,11 @@ export default function Dashboard() {
               <p className="text-3xl font-medium text-amber-500">18</p>
               <p className="text-zinc-500 text-sm mt-1">This month</p>
             </div>
+          </div>
+
+          {/* Wallet Information */}
+          <div className="mb-8">
+            <WalletInfo />
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-zinc-100 p-6 mb-8">

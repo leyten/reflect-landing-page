@@ -11,7 +11,14 @@ export function Providers({ children }: PropsWithChildren) {
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
       config={{
-        loginMethods: ["email", "wallet"],
+        loginMethods: ["email", "google", "twitter", "wallet"],
+        supportedChains: [
+          {
+            id: "solana",
+            name: "Solana",
+            rpcUrls: ["https://api.mainnet-beta.solana.com"],
+          },
+        ],
         appearance: {
           theme: "light",
           accentColor: "#f8d300",
@@ -19,6 +26,7 @@ export function Providers({ children }: PropsWithChildren) {
         },
         embeddedWallets: {
           createOnLogin: "users-without-wallets",
+          noPromptOnSignature: false,
         },
       }}
       onSuccess={() => router.push("/dashboard")}
