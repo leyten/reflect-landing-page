@@ -25,7 +25,7 @@ export default function TradeFrequencyHeatmap({ isVisible }: TradeFrequencyHeatm
         <CardDescription>When you trade most actively</CardDescription>
       </CardHeader>
       <CardContent className="pb-4 h-full flex flex-col">
-        <div className="space-y-2 mt-1 flex-1 flex flex-col justify-center">
+        <div className="flex-1 flex flex-col justify-center items-center space-y-3">
           {heatmapData.map((row, i) => (
             <div key={i} className="flex items-center space-x-2">
               <div className="w-10 text-xs text-gray-500 font-medium text-right">{row.time}</div>
