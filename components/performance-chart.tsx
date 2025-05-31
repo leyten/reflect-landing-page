@@ -83,7 +83,7 @@ export default function PerformanceChart({ isVisible }: PerformanceChartProps) {
               color: "#f8d300",
             },
           }}
-          className="h-[220px] mt-2 w-full"
+          className="h-[250px] mt-2 w-full"
         >
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={getTimeframeData()} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>

@@ -213,13 +213,15 @@ export default function ReflectDashboard() {
           </div>
         </div>
 
-        {/* Visual Data Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <div ref={chartAnimation.ref} className="h-full">
+        {/* Visual Data Section - Modified layout */}
+        <div className="grid grid-cols-12 gap-8 mb-8">
+          {/* Performance Chart - Now spans 8 columns */}
+          <div ref={chartAnimation.ref} className="col-span-12 lg:col-span-8 h-full">
             <PerformanceChart isVisible={chartAnimation.isVisible} />
           </div>
 
-          <div ref={heatmapAnimation.ref} className="h-full">
+          {/* Trade Frequency Heatmap - Now spans 4 columns and is shifted right */}
+          <div ref={heatmapAnimation.ref} className="col-span-12 lg:col-span-4 h-full">
             <TradeFrequencyHeatmap isVisible={heatmapAnimation.isVisible} />
           </div>
         </div>
