@@ -25,18 +25,18 @@ export default function TradeFrequencyHeatmap({ isVisible }: TradeFrequencyHeatm
         <CardDescription>When you trade most actively</CardDescription>
       </CardHeader>
       <CardContent className="pb-4 h-full flex flex-col">
-        <div className="flex-1 flex flex-col justify-center">
-          <div className="space-y-3">
+        <div className="flex-1 flex flex-col justify-between min-h-0">
+          <div className="flex-1 space-y-1">
             {heatmapData.map((row, i) => (
-              <div key={i} className="flex items-center space-x-2">
-                <div className="w-10 text-xs text-gray-500 font-medium text-right">{row.time}</div>
-                <div className="flex space-x-1">
+              <div key={i} className="flex items-center space-x-2 h-full">
+                <div className="w-12 text-xs text-gray-500 font-medium text-right flex-shrink-0">{row.time}</div>
+                <div className="flex space-x-1 flex-1">
                   {Object.entries(row)
                     .slice(1)
                     .map(([day, value]) => (
                       <div
                         key={day}
-                        className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold transition-transform duration-200 shadow-sm"
+                        className="flex-1 aspect-square rounded-md flex items-center justify-center text-xs font-bold transition-transform duration-200 shadow-sm min-h-[2rem]"
                         style={{
                           backgroundColor:
                             value === 0 ? "#f5f5f5" : value <= 2 ? "#fef3cd" : value <= 3 ? "#f8d300" : "#e6c200",
@@ -49,15 +49,15 @@ export default function TradeFrequencyHeatmap({ isVisible }: TradeFrequencyHeatm
                 </div>
               </div>
             ))}
-            <div className="flex items-center space-x-2 mt-4">
-              <div className="w-10"></div>
-              <div className="flex space-x-1 text-xs text-gray-500 font-medium">
-                {["M", "T", "W", "T", "F", "S", "S"].map((day, i) => (
-                  <div key={i} className="w-6 text-center">
-                    {day}
-                  </div>
-                ))}
-              </div>
+          </div>
+          <div className="flex items-center space-x-2 mt-3 flex-shrink-0">
+            <div className="w-12 flex-shrink-0"></div>
+            <div className="flex space-x-1 text-xs text-gray-500 font-medium flex-1">
+              {["M", "T", "W", "T", "F", "S", "S"].map((day, i) => (
+                <div key={i} className="flex-1 text-center">
+                  {day}
+                </div>
+              ))}
             </div>
           </div>
         </div>
