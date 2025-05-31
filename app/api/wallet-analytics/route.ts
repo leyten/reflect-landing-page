@@ -2,32 +2,28 @@ import { type NextRequest, NextResponse } from "next/server"
 import type { WalletAnalytics } from "@/lib/types"
 
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams
-  const wallet = searchParams.get("wallet")
-
-  if (!wallet) {
-    return NextResponse.json({ error: "Wallet address is required" }, { status: 400 })
-  }
-
   try {
-    // For demo purposes, return mock data to avoid API issues
-    // In production, uncomment the lines below to use real Moralis data
+    const searchParams = request.nextUrl.searchParams
+    const wallet = searchParams.get("wallet")
 
-    // const transfers = await getWalletTransfers(wallet)
-    // const trades = parseToTradeEvents(transfers, wallet)
+    if (!wallet || typeof wallet !== "string") {
+      return NextResponse.json({ error: "Wallet address is required" }, { status: 400 })
+    }
 
     // Mock analytics data based on wallet address for consistency
+    const hashValue = wallet.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
+
     const mockAnalytics: WalletAnalytics = {
-      totalTrades: 50 + (Number.parseInt(wallet.slice(-3), 16) % 200),
-      totalVolume: 10000 + (Number.parseInt(wallet.slice(-4), 16) % 50000),
-      winRate: 45 + (Number.parseInt(wallet.slice(-2), 16) % 40),
-      avgTradeSize: 500 + (Number.parseInt(wallet.slice(-5, -3), 16) % 2000),
-      tradingDays: 15 + (Number.parseInt(wallet.slice(-6, -4), 16) % 30),
+      totalTrades: 50 + (hashValue % 200),
+      totalVolume: 10000 + ((hashValue * 100) % 50000),
+      winRate: 45 + (hashValue % 40),
+      avgTradeSize: 500 + ((hashValue * 10) % 2000),
+      tradingDays: 15 + (hashValue % 30),
     }
 
     return NextResponse.json(mockAnalytics)
   } catch (error) {
-    console.error("Error fetching wallet analytics:", error)
-    return NextResponse.json({ error: "Failed to fetch wallet analytics" }, { status: 500 })
+    console.error("Error in wallet-analytics API:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
