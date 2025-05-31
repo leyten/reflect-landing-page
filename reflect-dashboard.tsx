@@ -302,6 +302,25 @@ export default function ReflectDashboard() {
                         tick={{ fontSize: 10, fill: "#6b7280" }}
                       />
                       <YAxis hide />
+                      <ChartTooltip
+                        content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                            const value = payload[0].value
+                            const isPositive = value >= 0
+                            return (
+                              <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md">
+                                <p className="text-sm font-medium text-gray-900">
+                                  {label}:{" "}
+                                  <span className={`font-bold ${isPositive ? "text-green-600" : "text-red-600"}`}>
+                                    {isPositive ? "+" : ""}${Math.abs(value).toLocaleString()}
+                                  </span>
+                                </p>
+                              </div>
+                            )
+                          }
+                          return null
+                        }}
+                      />
                       <Line
                         type="monotone"
                         dataKey="pnl"
@@ -314,6 +333,12 @@ export default function ReflectDashboard() {
                           strokeWidth: 2,
                           r: 4,
                           stroke: "#fff",
+                        }}
+                        activeDot={{
+                          r: 6,
+                          stroke: pnlData[pnlTimeframe].isPositive ? "#10b981" : "#ef4444",
+                          strokeWidth: 2,
+                          fill: "#fff",
                         }}
                       />
                     </LineChart>
