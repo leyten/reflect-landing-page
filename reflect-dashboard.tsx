@@ -325,7 +325,7 @@ export default function ReflectDashboard() {
 
               {/* PnL Graph */}
               <div className="flex flex-col items-center">
-                <div className="w-full h-[150px] bg-gray-900 rounded-xl overflow-hidden">
+                <div className="w-full h-[150px] overflow-hidden">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={detailedPnlData}
@@ -346,14 +346,14 @@ export default function ReflectDashboard() {
                       {activeTooltipIndex !== null && (
                         <ReferenceLine
                           x={detailedPnlData[activeTooltipIndex]?.time}
-                          stroke="#ffffff"
+                          stroke="#d1d5db"
                           strokeDasharray="3 3"
                           strokeOpacity={0.7}
                         />
                       )}
                       <XAxis
                         dataKey="time"
-                        tick={{ fill: "#9ca3af", fontSize: 10 }}
+                        tick={{ fill: "#6b7280", fontSize: 10 }}
                         axisLine={false}
                         tickLine={false}
                       />
@@ -366,11 +366,11 @@ export default function ReflectDashboard() {
                             const isPositive = value >= 0
                             const timestamp = payload[0].payload.timestamp
                             return (
-                              <div className="bg-gray-800 p-3 border border-gray-700 rounded-lg shadow-md">
-                                <p className={`text-lg font-bold ${isPositive ? "text-green-400" : "text-pink-500"}`}>
+                              <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md">
+                                <p className={`text-lg font-bold ${isPositive ? "text-green-600" : "text-red-600"}`}>
                                   {isPositive ? "+" : ""}${Math.abs(value).toLocaleString()}
                                 </p>
-                                <p className="text-xs text-gray-400 mt-1">{timestamp}</p>
+                                <p className="text-xs text-gray-500 mt-1">{timestamp}</p>
                               </div>
                             )
                           }
@@ -380,26 +380,21 @@ export default function ReflectDashboard() {
                       <Line
                         type="monotone"
                         dataKey="pnl"
-                        stroke="#10b981"
+                        stroke={pnlData[pnlTimeframe].isPositive ? "#10b981" : "#ef4444"}
                         strokeWidth={2}
                         dot={false}
                         activeDot={{
                           r: 6,
-                          stroke: "#10b981",
+                          stroke: pnlData[pnlTimeframe].isPositive ? "#10b981" : "#ef4444",
                           strokeWidth: 2,
-                          fill: "#111827",
+                          fill: "#ffffff",
                         }}
-                        strokeDasharray={null}
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         isAnimationActive={true}
                         animationDuration={1000}
                         animationEasing="ease-in-out"
                         connectNulls={true}
-                        strokeGradient={{
-                          positive: "#10b981",
-                          negative: "#ec4899",
-                        }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
