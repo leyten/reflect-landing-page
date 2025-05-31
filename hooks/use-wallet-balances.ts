@@ -36,29 +36,15 @@ export function useWalletBalances(walletAddress: string | undefined): WalletBala
       setError(null)
 
       try {
-        // Fetch SOL balance
-        const solResponse = await fetch(`https://api.mainnet-beta.solana.com`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            jsonrpc: "2.0",
-            id: 1,
-            method: "getBalance",
-            params: [walletAddress],
-          }),
-        })
-
+        // Fetch SOL balance from our API route
+        const solResponse = await fetch(`/api/solana-balance?wallet=${walletAddress}`)
         const solData = await solResponse.json()
-        if (solData.error) {
-          throw new Error(solData.error.message)
+
+        if (!solResponse.ok) {
+          throw new Error(solData.error || "Failed to fetch SOL balance")
         }
 
-        const solBalance = solData.result.value / 1000000000 // Convert lamports to SOL
-
-        // For demo purposes, we'll create some mock token data
-        // In a real app, you would fetch this from an API
+        // Mock token data (in production, you'd fetch this from a token API)
         const mockTokens: Token[] = [
           {
             mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
@@ -86,11 +72,16 @@ export function useWalletBalances(walletAddress: string | undefined): WalletBala
           },
         ]
 
-        setSol(solBalance)
+        setSol(solData.balance)
         setTokens(mockTokens)
       } catch (err) {
         console.error("Error fetching wallet balances:", err)
         setError(err instanceof Error ? err.message : "Unknown error")
+
+        // Set mock data on error
+        const mockBalance = 1 + (Number.parseInt(walletAddress?.slice(-4) || "0", 16) % 100) / 10
+        setSol(mockBalance)
+        setTokens([])
       } finally {
         setIsLoading(false)
       }

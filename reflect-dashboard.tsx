@@ -91,36 +91,55 @@ export default function ReflectDashboard() {
           </div>
         ) : (
           <>
-            {/* Main Score Card */}
-            <div ref={mainScoreAnimation.ref}>
-              <MainScoreCard isVisible={mainScoreAnimation.isVisible} walletAddress={primaryWallet?.address} />
-            </div>
-
-            {/* PnL Card */}
-            <PnLCard isVisible={mainScoreAnimation.isVisible} walletAddress={primaryWallet?.address} />
-
-            {/* Update the grid containers to use grid with equal height rows */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-              {/* Behavioral Summary */}
-              <div ref={behavioralAnimation.ref} className="h-full">
-                <BehavioralSummaryCard isVisible={behavioralAnimation.isVisible} />
+            {/* Add this after the existing state checks and before the main content */}
+            {!primaryWallet && authenticated ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <img src="/images/LogoTransparent.png" alt="Reflect Logo" className="h-24 w-24 mb-8" />
+                <h1 className="text-2xl font-bold text-gray-900 mb-4">No Wallet Connected</h1>
+                <p className="text-gray-600 mb-8 text-center max-w-md">
+                  Please connect a Solana wallet to view your trading analytics.
+                </p>
+                <Button
+                  onClick={login}
+                  className="bg-yellow-400 hover:bg-gray-900 text-black hover:text-white font-bold transition-colors duration-200 rounded-xl h-12 px-8"
+                >
+                  Connect Wallet
+                </Button>
               </div>
+            ) : (
+              <>
+                {/* Main Score Card */}
+                <div ref={mainScoreAnimation.ref}>
+                  <MainScoreCard isVisible={mainScoreAnimation.isVisible} walletAddress={primaryWallet?.address} />
+                </div>
 
-              {/* Psychological Profile */}
-              <div ref={profileAnimation.ref} className="h-full">
-                <PsychologicalProfileCard isVisible={profileAnimation.isVisible} />
-              </div>
+                {/* PnL Card */}
+                <PnLCard isVisible={mainScoreAnimation.isVisible} walletAddress={primaryWallet?.address} />
 
-              {/* Settings */}
-              <div ref={settingsAnimation.ref} className="h-full">
-                <SettingsCard isVisible={settingsAnimation.isVisible} />
-              </div>
-            </div>
+                {/* Update the grid containers to use grid with equal height rows */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+                  {/* Behavioral Summary */}
+                  <div ref={behavioralAnimation.ref} className="h-full">
+                    <BehavioralSummaryCard isVisible={behavioralAnimation.isVisible} />
+                  </div>
 
-            {/* Visual Data Section - Performance Chart full width */}
-            <div ref={chartAnimation.ref} className="mb-8">
-              <PerformanceChart isVisible={chartAnimation.isVisible} />
-            </div>
+                  {/* Psychological Profile */}
+                  <div ref={profileAnimation.ref} className="h-full">
+                    <PsychologicalProfileCard isVisible={profileAnimation.isVisible} />
+                  </div>
+
+                  {/* Settings */}
+                  <div ref={settingsAnimation.ref} className="h-full">
+                    <SettingsCard isVisible={settingsAnimation.isVisible} />
+                  </div>
+                </div>
+
+                {/* Visual Data Section - Performance Chart full width */}
+                <div ref={chartAnimation.ref} className="mb-8">
+                  <PerformanceChart isVisible={chartAnimation.isVisible} />
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
