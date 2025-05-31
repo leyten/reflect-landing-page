@@ -76,25 +76,27 @@ const generateDetailedPnlData = (timeframe) => {
   const now = new Date()
 
   if (timeframe === "day") {
-    // Generate hourly data for today
+    // Generate hourly data for today with some negative values
     return Array.from({ length: 24 }, (_, i) => {
       const hour = i
-      const value = Math.sin(i / 3) * 1000 + Math.random() * 500 - 200 + i * 100
+      const value = Math.sin(i / 3) * 1000 + Math.random() * 500 - 200 + i * 50
       const date = new Date(now)
       date.setHours(hour, 0, 0, 0)
       return {
         time: `${hour}:00`,
         pnl: Math.round(value),
+        pnlPos: value > 0 ? Math.round(value) : 0,
+        pnlNeg: value < 0 ? Math.round(value) : 0,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
     })
   } else if (timeframe === "week") {
-    // Generate data for each hour of the past 7 days
+    // Generate data for each hour of the past 7 days with some negative values
     return Array.from({ length: 7 * 8 }, (_, i) => {
       const day = Math.floor(i / 8)
       const hour = (i % 8) * 3
-      const value = Math.sin(i / 5) * 2000 + Math.random() * 1000 - 500 + i * 50
+      const value = Math.sin(i / 5) * 2000 + Math.random() * 1000 - 500 + i * 30
       const date = new Date(now)
       date.setDate(date.getDate() - (6 - day))
       date.setHours(hour, 0, 0, 0)
@@ -102,29 +104,33 @@ const generateDetailedPnlData = (timeframe) => {
       return {
         time: `${dayNames[date.getDay()]} ${hour}:00`,
         pnl: Math.round(value),
+        pnlPos: value > 0 ? Math.round(value) : 0,
+        pnlNeg: value < 0 ? Math.round(value) : 0,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
     })
   } else if (timeframe === "month") {
-    // Generate daily data for the past month
+    // Generate daily data for the past month with more negative values
     return Array.from({ length: 30 }, (_, i) => {
       const day = i + 1
-      const value = Math.sin(i / 10) * 3000 + Math.cos(i / 5) * 2000 + i * 100 - 2000
+      const value = Math.sin(i / 10) * 3000 + Math.cos(i / 5) * 2000 - 2000
       const date = new Date(now)
       date.setDate(date.getDate() - (30 - day))
       return {
         time: `${date.getMonth() + 1}/${date.getDate()}`,
         pnl: Math.round(value),
+        pnlPos: value > 0 ? Math.round(value) : 0,
+        pnlNeg: value < 0 ? Math.round(value) : 0,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
     })
   } else {
-    // Generate monthly data for the year
+    // Generate monthly data for the year with some negative values
     return Array.from({ length: 12 }, (_, i) => {
       const month = i
-      const value = Math.sin(i / 2) * 5000 + Math.cos(i / 4) * 10000 + i * 1000
+      const value = Math.sin(i / 2) * 5000 + Math.cos(i / 4) * 10000 + i * 1000 - (i < 3 ? 8000 : 0)
       const date = new Date(now)
       date.setMonth(month)
       date.setDate(15)
@@ -132,6 +138,8 @@ const generateDetailedPnlData = (timeframe) => {
       return {
         time: monthNames[month],
         pnl: Math.round(value),
+        pnlPos: value > 0 ? Math.round(value) : 0,
+        pnlNeg: value < 0 ? Math.round(value) : 0,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
@@ -338,7 +346,7 @@ export default function ReflectDashboard() {
                       onMouseLeave={() => setActiveTooltipIndex(null)}
                     >
                       <defs>
-                        <linearGradient id="colorPnl" x1="0" y1="0" x2="0" y2="1">
+                        <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
                           <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                         </linearGradient>
@@ -358,6 +366,7 @@ export default function ReflectDashboard() {
                         tickLine={false}
                       />
                       <YAxis hide />
+                      <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
                       <ChartTooltip
                         cursor={false}
                         content={({ active, payload, label }) => {
@@ -377,24 +386,55 @@ export default function ReflectDashboard() {
                           return null
                         }}
                       />
+                      {/* Positive values line (green) */}
                       <Line
                         type="monotone"
-                        dataKey="pnl"
-                        stroke={pnlData[pnlTimeframe].isPositive ? "#10b981" : "#ef4444"}
+                        dataKey="pnlPos"
+                        stroke="#10b981"
                         strokeWidth={2}
                         dot={false}
-                        activeDot={{
-                          r: 6,
-                          stroke: pnlData[pnlTimeframe].isPositive ? "#10b981" : "#ef4444",
-                          strokeWidth: 2,
-                          fill: "#ffffff",
-                        }}
+                        activeDot={false}
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         isAnimationActive={true}
                         animationDuration={1000}
-                        animationEasing="ease-in-out"
                         connectNulls={true}
+                      />
+                      {/* Negative values line (red) */}
+                      <Line
+                        type="monotone"
+                        dataKey="pnlNeg"
+                        stroke="#ef4444"
+                        strokeWidth={2}
+                        dot={false}
+                        activeDot={false}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        isAnimationActive={true}
+                        animationDuration={1000}
+                        connectNulls={true}
+                      />
+                      {/* Active dot layer */}
+                      <Line
+                        type="monotone"
+                        dataKey="pnl"
+                        stroke="transparent"
+                        dot={false}
+                        activeDot={({ cx, cy, stroke, dataKey, value, ...rest }) => {
+                          const isPositive = value >= 0
+                          return (
+                            <circle
+                              cx={cx}
+                              cy={cy}
+                              r={6}
+                              stroke={isPositive ? "#10b981" : "#ef4444"}
+                              strokeWidth={2}
+                              fill="#ffffff"
+                              {...rest}
+                            />
+                          )
+                        }}
+                        isAnimationActive={false}
                       />
                     </LineChart>
                   </ResponsiveContainer>
