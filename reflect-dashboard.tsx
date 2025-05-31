@@ -1,6 +1,4 @@
 "use client"
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useEffect, useRef, useState } from "react"
 import MainScoreCard from "./components/main-score-card"
 import PnLCard from "./components/pnl-card"
@@ -8,6 +6,9 @@ import BehavioralSummaryCard from "./components/behavioral-summary-card"
 import PsychologicalProfileCard from "./components/psychological-profile-card"
 import SettingsCard from "./components/settings-card"
 import PerformanceChart from "./components/performance-chart"
+import WalletConnectButton from "./components/wallet-connect-button"
+import { useWalletAddress } from "./lib/privy"
+import { Loader2 } from "lucide-react"
 
 // Sample data
 const weeklyScoreData = [
@@ -35,13 +36,6 @@ const quarterlyScoreData = [
   { day: "Q2", score: 72 },
   { day: "Q3", score: 74 },
   { day: "Q4", score: 78 },
-]
-
-const heatmapData = [
-  { time: "9AM", Mon: 2, Tue: 1, Wed: 3, Thu: 0, Fri: 4, Sat: 1, Sun: 0 },
-  { time: "12PM", Mon: 3, Tue: 2, Wed: 1, Thu: 2, Fri: 3, Sat: 0, Sun: 1 },
-  { time: "3PM", Mon: 1, Tue: 4, Wed: 2, Thu: 3, Fri: 2, Sat: 2, Sun: 0 },
-  { time: "6PM", Mon: 0, Tue: 1, Wed: 0, Thu: 1, Fri: 1, Sat: 3, Sun: 2 },
 ]
 
 const pnlData = {
@@ -159,7 +153,7 @@ export default function ReflectDashboard() {
   const settingsAnimation = useScrollAnimation()
   const chartAnimation = useScrollAnimation()
 
-  const [walletAddress] = useState("0x4A...B7C2") // Replace with actual wallet connection
+  const { walletAddress, loading: walletLoading, authenticated } = useWalletAddress()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -177,46 +171,60 @@ export default function ReflectDashboard() {
             <img src="/images/bannerLarge.png" alt="Reflect Banner" className="h-8 transition-transform duration-200" />
           </div>
           <div className="flex items-center space-x-4">
-            <Avatar className="ring-2 ring-yellow-400/20 transition-all duration-200">
-              <AvatarImage src="/placeholder.svg?height=32&width=32" />
-              <AvatarFallback className="bg-yellow-400 text-black font-semibold">0x4A</AvatarFallback>
-            </Avatar>
-            <span className="text-sm text-gray-600 font-medium">0x4A...B7C2</span>
+            <WalletConnectButton />
           </div>
         </div>
       </header>
 
       <div className="relative max-w-7xl mx-auto px-6 py-10">
-        {/* Main Score Card */}
-        <div ref={mainScoreAnimation.ref}>
-          <MainScoreCard isVisible={mainScoreAnimation.isVisible} walletAddress={walletAddress} />
-        </div>
-
-        {/* PnL Card */}
-        <PnLCard isVisible={mainScoreAnimation.isVisible} />
-
-        {/* Update the grid containers to use grid with equal height rows */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-          {/* Behavioral Summary */}
-          <div ref={behavioralAnimation.ref} className="h-full">
-            <BehavioralSummaryCard isVisible={behavioralAnimation.isVisible} />
+        {!authenticated ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <img src="/images/LogoTransparent.png" alt="Reflect Logo" className="h-24 w-24 mb-8" />
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Welcome to Reflect</h1>
+            <p className="text-gray-600 mb-8 text-center max-w-md">
+              Connect your Solana wallet to see your personalized Reflect Score and trading analytics.
+            </p>
+            <WalletConnectButton />
           </div>
-
-          {/* Psychological Profile */}
-          <div ref={profileAnimation.ref} className="h-full">
-            <PsychologicalProfileCard isVisible={profileAnimation.isVisible} />
+        ) : walletLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="h-12 w-12 animate-spin text-yellow-400 mb-4" />
+            <p className="text-gray-600">Loading your trading data...</p>
           </div>
+        ) : (
+          <>
+            {/* Main Score Card */}
+            <div ref={mainScoreAnimation.ref}>
+              <MainScoreCard isVisible={mainScoreAnimation.isVisible} walletAddress={walletAddress} />
+            </div>
 
-          {/* Settings */}
-          <div ref={settingsAnimation.ref} className="h-full">
-            <SettingsCard isVisible={settingsAnimation.isVisible} />
-          </div>
-        </div>
+            {/* PnL Card */}
+            <PnLCard isVisible={mainScoreAnimation.isVisible} />
 
-        {/* Visual Data Section - Performance Chart full width */}
-        <div ref={chartAnimation.ref} className="mb-8">
-          <PerformanceChart isVisible={chartAnimation.isVisible} />
-        </div>
+            {/* Update the grid containers to use grid with equal height rows */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+              {/* Behavioral Summary */}
+              <div ref={behavioralAnimation.ref} className="h-full">
+                <BehavioralSummaryCard isVisible={behavioralAnimation.isVisible} />
+              </div>
+
+              {/* Psychological Profile */}
+              <div ref={profileAnimation.ref} className="h-full">
+                <PsychologicalProfileCard isVisible={profileAnimation.isVisible} />
+              </div>
+
+              {/* Settings */}
+              <div ref={settingsAnimation.ref} className="h-full">
+                <SettingsCard isVisible={settingsAnimation.isVisible} />
+              </div>
+            </div>
+
+            {/* Visual Data Section - Performance Chart full width */}
+            <div ref={chartAnimation.ref} className="mb-8">
+              <PerformanceChart isVisible={chartAnimation.isVisible} />
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

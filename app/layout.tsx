@@ -1,10 +1,12 @@
-import type { Metadata } from 'next'
-import './globals.css'
+import type React from "react"
+import type { Metadata } from "next"
+import "./globals.css"
+import { PrivyProvider } from "@/lib/privy"
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: "Reflect Dashboard",
+  description: "AI-powered trading co-pilot for emotional traders",
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
@@ -14,7 +16,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <PrivyProvider>{children}</PrivyProvider>
+      </body>
     </html>
   )
 }
