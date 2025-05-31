@@ -11,7 +11,7 @@ interface MainScoreCardProps {
 }
 
 export default function MainScoreCard({ isVisible, walletAddress }: MainScoreCardProps) {
-  const { score, loading, error } = useReflectScore(walletAddress)
+  const { score, loading, error } = useReflectScore(walletAddress || null)
   const [animatedScore, setAnimatedScore] = useState(0)
   const targetScore = score?.total || 72
 

@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import "./globals.css"
-import { PrivyProvider } from "@/lib/privy"
+import PrivyProviderWrapper from "@/components/privy-provider"
 
 export const metadata: Metadata = {
   title: "Reflect Dashboard",
@@ -17,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <PrivyProvider>{children}</PrivyProvider>
+        <PrivyProviderWrapper>{children}</PrivyProviderWrapper>
       </body>
     </html>
   )
