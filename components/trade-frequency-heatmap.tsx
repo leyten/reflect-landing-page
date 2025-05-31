@@ -1,52 +1,12 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useEffect, useState } from "react"
 
 interface TradeFrequencyHeatmapProps {
   isVisible: boolean
 }
 
-// New trading frequency data structure
-const tradeFrequencyData = [
-  { hour: 9, mon: 5, tue: 2, wed: 8, thu: 1, fri: 10, sat: 3, sun: 0 },
-  { hour: 10, mon: 7, tue: 4, wed: 6, thu: 3, fri: 8, sat: 2, sun: 1 },
-  { hour: 11, mon: 9, tue: 6, wed: 4, thu: 5, fri: 7, sat: 0, sun: 0 },
-  { hour: 12, mon: 12, tue: 8, wed: 7, thu: 6, fri: 9, sat: 1, sun: 2 },
-  { hour: 13, mon: 8, tue: 10, wed: 9, thu: 4, fri: 6, sat: 0, sun: 0 },
-  { hour: 14, mon: 6, tue: 7, wed: 11, thu: 8, fri: 5, sat: 2, sun: 1 },
-  { hour: 15, mon: 10, tue: 9, wed: 5, thu: 7, fri: 4, sat: 3, sun: 0 },
-  { hour: 16, mon: 11, tue: 5, wed: 3, thu: 9, fri: 12, sat: 4, sun: 2 },
-]
-
-// Days of the week
-const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
-const dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
-
 export default function TradeFrequencyHeatmap({ isVisible }: TradeFrequencyHeatmapProps) {
-  const [maxValue, setMaxValue] = useState(12)
-
-  useEffect(() => {
-    // Find the maximum value in the dataset for color scaling
-    const max = Math.max(
-      ...tradeFrequencyData.flatMap((row) => days.map((day) => row[day as keyof typeof row] as number)),
-    )
-    setMaxValue(max)
-  }, [])
-
-  // Function to get color based on value intensity
-  const getColor = (value: number) => {
-    if (value === 0) return "#f5f5f5"
-
-    const intensity = value / maxValue
-
-    if (intensity < 0.2) return "#fff9c4"
-    if (intensity < 0.4) return "#ffee58"
-    if (intensity < 0.6) return "#fdd835"
-    if (intensity < 0.8) return "#ffb300"
-    return "#ff8f00"
-  }
-
   return (
     <Card
       className={`bg-white shadow-lg border-0 rounded-3xl transition-all duration-700 delay-200 h-full ${
@@ -57,58 +17,77 @@ export default function TradeFrequencyHeatmap({ isVisible }: TradeFrequencyHeatm
         <CardTitle className="text-xl font-bold text-gray-900">Trade Frequency</CardTitle>
         <CardDescription>When you trade most actively</CardDescription>
       </CardHeader>
-      <CardContent className="p-4 h-full">
-        <div className="h-full flex flex-col">
-          {/* Legend */}
-          <div className="flex justify-end mb-2 gap-1">
-            <div className="flex items-center text-xs text-gray-500">
-              <span className="mr-1">Low</span>
-              {[0.2, 0.4, 0.6, 0.8, 1].map((intensity, i) => (
-                <div key={i} className="w-3 h-3" style={{ backgroundColor: getColor(intensity * maxValue) }}></div>
-              ))}
-              <span className="ml-1">High</span>
-            </div>
-          </div>
-
-          {/* Day labels */}
-          <div className="flex mb-1">
-            <div className="w-10 flex-shrink-0"></div>
-            <div className="flex-1 grid grid-cols-7 gap-1">
-              {dayLabels.map((day, i) => (
-                <div key={i} className="text-center text-xs font-medium text-gray-500">
-                  {day}
-                </div>
-              ))}
-            </div>
+      <CardContent className="p-6 h-full flex flex-col">
+        <div className="flex-1 flex flex-col justify-center">
+          {/* Header row with day labels */}
+          <div className="grid grid-cols-8 gap-2 mb-2">
+            <div className="text-xs text-gray-500 font-medium"></div>
+            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+              <div key={day} className="text-xs text-gray-500 font-medium text-center">
+                {day}
+              </div>
+            ))}
           </div>
 
           {/* Heatmap grid */}
-          <div className="flex-1 overflow-hidden">
-            <div className="h-full flex flex-col justify-between">
-              {tradeFrequencyData.map((row, i) => (
-                <div key={i} className="flex items-center mb-1 last:mb-0">
-                  <div className="w-10 text-xs text-gray-500 font-medium text-right pr-2">{row.hour}:00</div>
-                  <div className="flex-1 grid grid-cols-7 gap-1">
-                    {days.map((day) => {
-                      const value = row[day as keyof typeof row] as number
-                      return (
-                        <div
-                          key={day}
-                          className="aspect-square rounded-sm flex items-center justify-center transition-all duration-300 relative group"
-                          style={{ backgroundColor: getColor(value) }}
-                        >
-                          {value > 0 && (
-                            <span className="absolute inset-0 flex items-center justify-center text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-10 rounded-sm">
-                              {value}
-                            </span>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
+          <div className="flex-1 space-y-2">
+            {["9AM", "11AM", "1PM", "3PM", "5PM"].map((time, timeIndex) => (
+              <div key={time} className="grid grid-cols-8 gap-2 h-full">
+                <div className="text-xs text-gray-500 font-medium flex items-center justify-end pr-2">{time}</div>
+                {Array.from({ length: 7 }, (_, dayIndex) => {
+                  // Generate random intensity values for demo
+                  const intensity = Math.floor(Math.random() * 5)
+                  const getColor = (value) => {
+                    if (value === 0) return "#f8f9fa"
+                    if (value === 1) return "#fff3cd"
+                    if (value === 2) return "#ffeaa7"
+                    if (value === 3) return "#fdcb6e"
+                    return "#f39c12"
+                  }
+
+                  return (
+                    <div
+                      key={`${timeIndex}-${dayIndex}`}
+                      className="rounded-lg flex items-center justify-center text-xs font-bold transition-all duration-200 hover:scale-105 cursor-pointer shadow-sm"
+                      style={{
+                        backgroundColor: getColor(intensity),
+                        color: intensity > 2 ? "#2d3436" : "#636e72",
+                        minHeight: "2.5rem",
+                      }}
+                      title={`${time} ${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][dayIndex]}: ${intensity} trades`}
+                    >
+                      {intensity > 0 ? intensity : ""}
+                    </div>
+                  )
+                })}
+              </div>
+            ))}
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center justify-center space-x-4 mt-4 pt-3 border-t border-gray-100">
+            <span className="text-xs text-gray-500">Less</span>
+            <div className="flex space-x-1">
+              {[0, 1, 2, 3, 4].map((level) => (
+                <div
+                  key={level}
+                  className="w-3 h-3 rounded-sm"
+                  style={{
+                    backgroundColor:
+                      level === 0
+                        ? "#f8f9fa"
+                        : level === 1
+                          ? "#fff3cd"
+                          : level === 2
+                            ? "#ffeaa7"
+                            : level === 3
+                              ? "#fdcb6e"
+                              : "#f39c12",
+                  }}
+                />
               ))}
             </div>
+            <span className="text-xs text-gray-500">More</span>
           </div>
         </div>
       </CardContent>
