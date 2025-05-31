@@ -159,6 +159,8 @@ export default function ReflectDashboard() {
   const settingsAnimation = useScrollAnimation()
   const chartAnimation = useScrollAnimation()
 
+  const [walletAddress] = useState("0x4A...B7C2") // Replace with actual wallet connection
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -187,7 +189,7 @@ export default function ReflectDashboard() {
       <div className="relative max-w-7xl mx-auto px-6 py-10">
         {/* Main Score Card */}
         <div ref={mainScoreAnimation.ref}>
-          <MainScoreCard isVisible={mainScoreAnimation.isVisible} />
+          <MainScoreCard isVisible={mainScoreAnimation.isVisible} walletAddress={walletAddress} />
         </div>
 
         {/* PnL Card */}
