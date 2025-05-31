@@ -52,7 +52,7 @@ export default function PerformanceChart({ isVisible }: PerformanceChartProps) {
 
   return (
     <Card
-      className={`bg-white shadow-lg border-0 rounded-3xl transition-all duration-700 delay-100 ${
+      className={`bg-white shadow-lg border-0 rounded-3xl transition-all duration-700 delay-100 h-full ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       }`}
     >

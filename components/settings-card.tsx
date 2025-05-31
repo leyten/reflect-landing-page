@@ -17,7 +17,7 @@ const settingsData = [
 export default function SettingsCard({ isVisible }: SettingsCardProps) {
   return (
     <Card
-      className={`bg-white shadow-lg border-0 rounded-3xl transition-all duration-700 delay-300 ${
+      className={`bg-white shadow-lg border-0 rounded-3xl transition-all duration-700 delay-300 h-full ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       }`}
     >

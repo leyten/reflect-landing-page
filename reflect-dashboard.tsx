@@ -218,30 +218,31 @@ export default function ReflectDashboard() {
         {/* PnL Card */}
         <PnLCard isVisible={mainScoreAnimation.isVisible} />
 
+        {/* Update the grid containers to use grid with equal height rows */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
           {/* Behavioral Summary */}
-          <div ref={behavioralAnimation.ref}>
+          <div ref={behavioralAnimation.ref} className="h-full">
             <BehavioralSummaryCard isVisible={behavioralAnimation.isVisible} />
           </div>
 
           {/* Psychological Profile */}
-          <div ref={profileAnimation.ref}>
+          <div ref={profileAnimation.ref} className="h-full">
             <PsychologicalProfileCard isVisible={profileAnimation.isVisible} />
           </div>
 
           {/* Settings */}
-          <div ref={settingsAnimation.ref}>
+          <div ref={settingsAnimation.ref} className="h-full">
             <SettingsCard isVisible={settingsAnimation.isVisible} />
           </div>
         </div>
 
         {/* Visual Data Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <div ref={chartAnimation.ref}>
+          <div ref={chartAnimation.ref} className="h-full">
             <PerformanceChart isVisible={chartAnimation.isVisible} />
           </div>
 
-          <div ref={heatmapAnimation.ref}>
+          <div ref={heatmapAnimation.ref} className="h-full">
             <TradeFrequencyHeatmap isVisible={heatmapAnimation.isVisible} />
           </div>
         </div>
