@@ -8,7 +8,6 @@ import BehavioralSummaryCard from "./components/behavioral-summary-card"
 import PsychologicalProfileCard from "./components/psychological-profile-card"
 import SettingsCard from "./components/settings-card"
 import PerformanceChart from "./components/performance-chart"
-import TradeFrequencyHeatmap from "./components/trade-frequency-heatmap"
 
 // Sample data
 const weeklyScoreData = [
@@ -159,7 +158,6 @@ export default function ReflectDashboard() {
   const profileAnimation = useScrollAnimation()
   const settingsAnimation = useScrollAnimation()
   const chartAnimation = useScrollAnimation()
-  const heatmapAnimation = useScrollAnimation()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -213,17 +211,9 @@ export default function ReflectDashboard() {
           </div>
         </div>
 
-        {/* Visual Data Section - Modified layout */}
-        <div className="grid grid-cols-12 gap-8 mb-8">
-          {/* Performance Chart - Now spans 8 columns */}
-          <div ref={chartAnimation.ref} className="col-span-12 lg:col-span-8 h-full">
-            <PerformanceChart isVisible={chartAnimation.isVisible} />
-          </div>
-
-          {/* Trade Frequency Heatmap - Now spans 4 columns and is shifted right */}
-          <div ref={heatmapAnimation.ref} className="col-span-12 lg:col-span-4 h-full">
-            <TradeFrequencyHeatmap isVisible={heatmapAnimation.isVisible} />
-          </div>
+        {/* Visual Data Section - Performance Chart full width */}
+        <div ref={chartAnimation.ref} className="mb-8">
+          <PerformanceChart isVisible={chartAnimation.isVisible} />
         </div>
       </div>
     </div>
