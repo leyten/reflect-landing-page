@@ -9,8 +9,6 @@ import PsychologicalProfileCard from "./components/psychological-profile-card"
 import SettingsCard from "./components/settings-card"
 import PerformanceChart from "./components/performance-chart"
 import TradeFrequencyHeatmap from "./components/trade-frequency-heatmap"
-import EmotionalTriggerLog from "./components/emotional-trigger-log"
-import ImprovementTimeline from "./components/improvement-timeline"
 
 // Sample data
 const weeklyScoreData = [
@@ -45,25 +43,6 @@ const heatmapData = [
   { time: "12PM", Mon: 3, Tue: 2, Wed: 1, Thu: 2, Fri: 3, Sat: 0, Sun: 1 },
   { time: "3PM", Mon: 1, Tue: 4, Wed: 2, Thu: 3, Fri: 2, Sat: 2, Sun: 0 },
   { time: "6PM", Mon: 0, Tue: 1, Wed: 0, Thu: 1, Fri: 1, Sat: 3, Sun: 2 },
-]
-
-const emotionalTriggers = [
-  { timestamp: "11:23 AM", behavior: "Revenge Trade", insight: "After -$1,400 loss", severity: "high" },
-  { timestamp: "2:45 PM", behavior: "FOMO Entry", insight: "Saw 15% pump on Twitter", severity: "medium" },
-  { timestamp: "4:12 PM", behavior: "Healthy Pause", insight: "Stopped after 2 losses", severity: "positive" },
-  {
-    timestamp: "Yesterday 3:30 PM",
-    behavior: "Oversize Position",
-    insight: "Emotional after win streak",
-    severity: "medium",
-  },
-]
-
-const timelineEvents = [
-  { week: "Week 1", score: 65, event: "Started tracking emotions" },
-  { week: "Week 2", score: 68, event: "Reduced revenge trades by 40%" },
-  { week: "Week 3", score: 70, event: "Implemented pause strategy" },
-  { week: "Week 4", score: 72, event: "No revenge trades this week ✅" },
 ]
 
 const pnlData = {
@@ -181,8 +160,6 @@ export default function ReflectDashboard() {
   const settingsAnimation = useScrollAnimation()
   const chartAnimation = useScrollAnimation()
   const heatmapAnimation = useScrollAnimation()
-  const triggerAnimation = useScrollAnimation()
-  const timelineAnimation = useScrollAnimation()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -245,16 +222,6 @@ export default function ReflectDashboard() {
           <div ref={heatmapAnimation.ref} className="h-full">
             <TradeFrequencyHeatmap isVisible={heatmapAnimation.isVisible} />
           </div>
-        </div>
-
-        {/* Emotional Trigger Log */}
-        <div ref={triggerAnimation.ref}>
-          <EmotionalTriggerLog isVisible={triggerAnimation.isVisible} />
-        </div>
-
-        {/* Improvement Timeline */}
-        <div ref={timelineAnimation.ref}>
-          <ImprovementTimeline isVisible={timelineAnimation.isVisible} />
         </div>
       </div>
     </div>
