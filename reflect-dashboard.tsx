@@ -222,47 +222,172 @@ export default function ReflectDashboard() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-baseline">
-                  <span
-                    className={`text-4xl font-black ${pnlData[pnlTimeframe].isPositive ? "text-green-500" : "text-red-500"}`}
-                  >
-                    {pnlData[pnlTimeframe].isPositive ? "+" : ""}$
-                    {Math.abs(pnlData[pnlTimeframe].value).toLocaleString()}
-                  </span>
-                  <span
-                    className={`ml-2 text-lg font-bold ${pnlData[pnlTimeframe].isPositive ? "text-green-500" : "text-red-500"}`}
-                  >
-                    {pnlData[pnlTimeframe].isPositive ? "+" : ""}
-                    {pnlData[pnlTimeframe].percentage}%
-                  </span>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+              {/* Total Buy */}
+              <div className="text-center">
+                <div className="bg-green-50 rounded-2xl p-6">
+                  <div className="text-sm text-green-600 mb-2 font-medium">Total Buy</div>
+                  <div className="text-3xl font-black text-green-600">
+                    $
+                    {pnlTimeframe === "day"
+                      ? "12,450"
+                      : pnlTimeframe === "week"
+                        ? "48,200"
+                        : pnlTimeframe === "month"
+                          ? "156,800"
+                          : "1,240,000"}
+                  </div>
+                  <div className="text-xs text-green-500 mt-1">
+                    {pnlTimeframe === "day"
+                      ? "8 trades"
+                      : pnlTimeframe === "week"
+                        ? "23 trades"
+                        : pnlTimeframe === "month"
+                          ? "89 trades"
+                          : "1,247 trades"}
+                  </div>
                 </div>
-                <p className="text-gray-600 mt-2">
-                  {pnlTimeframe === "day"
-                    ? "Today"
-                    : pnlTimeframe === "week"
-                      ? "This week"
-                      : pnlTimeframe === "month"
-                        ? "This month"
-                        : "All time"}{" "}
-                  performance
-                </p>
               </div>
 
-              <div className="bg-gray-50 rounded-2xl p-6 min-w-[200px]">
-                <div className="text-sm text-gray-600 mb-3 font-medium">Win/Loss Ratio</div>
-                <div className="flex items-center space-x-3">
-                  <div className="flex-1">
-                    <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-yellow-400 rounded-full"
-                        style={{ width: `${pnlTimeframe === "month" ? 45 : 65}%` }}
-                      ></div>
-                    </div>
+              {/* PnL Graph */}
+              <div className="flex flex-col items-center">
+                <ChartContainer
+                  config={{
+                    pnl: {
+                      label: "PnL",
+                      color: pnlData[pnlTimeframe].isPositive ? "#10b981" : "#ef4444",
+                    },
+                  }}
+                  className="h-[120px] w-full"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={
+                        pnlTimeframe === "day"
+                          ? [
+                              { time: "9AM", pnl: 0 },
+                              { time: "10AM", pnl: 450 },
+                              { time: "11AM", pnl: 320 },
+                              { time: "12PM", pnl: 780 },
+                              { time: "1PM", pnl: 1240 },
+                            ]
+                          : pnlTimeframe === "week"
+                            ? [
+                                { time: "Mon", pnl: 1240 },
+                                { time: "Tue", pnl: 2100 },
+                                { time: "Wed", pnl: 1850 },
+                                { time: "Thu", pnl: 3200 },
+                                { time: "Fri", pnl: 4850 },
+                              ]
+                            : pnlTimeframe === "month"
+                              ? [
+                                  { time: "W1", pnl: 4850 },
+                                  { time: "W2", pnl: 2100 },
+                                  { time: "W3", pnl: -1200 },
+                                  { time: "W4", pnl: -2340 },
+                                ]
+                              : [
+                                  { time: "Q1", pnl: 8500 },
+                                  { time: "Q2", pnl: 15200 },
+                                  { time: "Q3", pnl: 22100 },
+                                  { time: "Q4", pnl: 28750 },
+                                ]
+                      }
+                      margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                    >
+                      <XAxis
+                        dataKey="time"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fill: "#6b7280" }}
+                      />
+                      <YAxis hide />
+                      <Line
+                        type="monotone"
+                        dataKey="pnl"
+                        stroke={pnlData[pnlTimeframe].isPositive ? "#10b981" : "#ef4444"}
+                        strokeWidth={3}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        dot={{
+                          fill: pnlData[pnlTimeframe].isPositive ? "#10b981" : "#ef4444",
+                          strokeWidth: 2,
+                          r: 4,
+                          stroke: "#fff",
+                        }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+
+                <div className="mt-4 text-center">
+                  <div className="flex items-baseline justify-center">
+                    <span
+                      className={`text-3xl font-black ${pnlData[pnlTimeframe].isPositive ? "text-green-500" : "text-red-500"}`}
+                    >
+                      {pnlData[pnlTimeframe].isPositive ? "+" : ""}$
+                      {Math.abs(pnlData[pnlTimeframe].value).toLocaleString()}
+                    </span>
+                    <span
+                      className={`ml-2 text-lg font-bold ${pnlData[pnlTimeframe].isPositive ? "text-green-500" : "text-red-500"}`}
+                    >
+                      {pnlData[pnlTimeframe].isPositive ? "+" : ""}
+                      {pnlData[pnlTimeframe].percentage}%
+                    </span>
                   </div>
-                  <span className="text-lg font-bold text-yellow-600">{pnlTimeframe === "month" ? "0.8" : "1.9"}</span>
+                  <p className="text-gray-600 text-sm mt-1">
+                    {pnlTimeframe === "day"
+                      ? "Today"
+                      : pnlTimeframe === "week"
+                        ? "This week"
+                        : pnlTimeframe === "month"
+                          ? "This month"
+                          : "All time"}{" "}
+                    performance
+                  </p>
                 </div>
+              </div>
+
+              {/* Total Sell */}
+              <div className="text-center">
+                <div className="bg-red-50 rounded-2xl p-6">
+                  <div className="text-sm text-red-600 mb-2 font-medium">Total Sell</div>
+                  <div className="text-3xl font-black text-red-600">
+                    $
+                    {pnlTimeframe === "day"
+                      ? "11,210"
+                      : pnlTimeframe === "week"
+                        ? "43,350"
+                        : pnlTimeframe === "month"
+                          ? "159,140"
+                          : "1,211,250"}
+                  </div>
+                  <div className="text-xs text-red-500 mt-1">
+                    {pnlTimeframe === "day"
+                      ? "6 trades"
+                      : pnlTimeframe === "week"
+                        ? "19 trades"
+                        : pnlTimeframe === "month"
+                          ? "92 trades"
+                          : "1,198 trades"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Win/Loss Ratio */}
+            <div className="mt-6 bg-gray-50 rounded-2xl p-6">
+              <div className="text-sm text-gray-600 mb-3 font-medium text-center">Win/Loss Ratio</div>
+              <div className="flex items-center space-x-3">
+                <div className="flex-1">
+                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-yellow-400 rounded-full"
+                      style={{ width: `${pnlTimeframe === "month" ? 45 : 65}%` }}
+                    ></div>
+                  </div>
+                </div>
+                <span className="text-lg font-bold text-yellow-600">{pnlTimeframe === "month" ? "0.8" : "1.9"}</span>
               </div>
             </div>
           </CardContent>
