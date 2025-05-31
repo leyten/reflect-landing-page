@@ -265,42 +265,58 @@ export default function ReflectDashboard() {
                       data={
                         pnlTimeframe === "day"
                           ? [
-                              { time: "9AM", pnl: 0 },
-                              { time: "10AM", pnl: 450 },
-                              { time: "11AM", pnl: 320 },
-                              { time: "12PM", pnl: 780 },
-                              { time: "1PM", pnl: 1240 },
+                              { time: "9:00", pnl: 0 },
+                              { time: "9:15", pnl: -120 },
+                              { time: "9:30", pnl: -280 },
+                              { time: "9:45", pnl: -150 },
+                              { time: "10:00", pnl: 200 },
+                              { time: "10:15", pnl: 450 },
+                              { time: "10:30", pnl: 380 },
+                              { time: "10:45", pnl: 320 },
+                              { time: "11:00", pnl: 520 },
+                              { time: "11:15", pnl: 680 },
+                              { time: "11:30", pnl: 780 },
+                              { time: "11:45", pnl: 920 },
+                              { time: "12:00", pnl: 1240 },
                             ]
                           : pnlTimeframe === "week"
                             ? [
-                                { time: "Mon", pnl: 1240 },
-                                { time: "Tue", pnl: 2100 },
-                                { time: "Wed", pnl: 1850 },
-                                { time: "Thu", pnl: 3200 },
-                                { time: "Fri", pnl: 4850 },
+                                { time: "Mon", pnl: -450 },
+                                { time: "Mon PM", pnl: 320 },
+                                { time: "Tue", pnl: 1240 },
+                                { time: "Tue PM", pnl: 1850 },
+                                { time: "Wed", pnl: 2100 },
+                                { time: "Wed PM", pnl: 1950 },
+                                { time: "Thu", pnl: 2800 },
+                                { time: "Thu PM", pnl: 3200 },
+                                { time: "Fri", pnl: 4200 },
+                                { time: "Fri PM", pnl: 4850 },
                               ]
                             : pnlTimeframe === "month"
                               ? [
                                   { time: "W1", pnl: 4850 },
+                                  { time: "W1.5", pnl: 3200 },
                                   { time: "W2", pnl: 2100 },
-                                  { time: "W3", pnl: -1200 },
-                                  { time: "W4", pnl: -2340 },
+                                  { time: "W2.5", pnl: 800 },
+                                  { time: "W3", pnl: -400 },
+                                  { time: "W3.5", pnl: -1200 },
+                                  { time: "W4", pnl: -1800 },
+                                  { time: "W4.5", pnl: -2340 },
                                 ]
                               : [
-                                  { time: "Q1", pnl: 8500 },
-                                  { time: "Q2", pnl: 15200 },
-                                  { time: "Q3", pnl: 22100 },
-                                  { time: "Q4", pnl: 28750 },
+                                  { time: "Q1", pnl: 2500 },
+                                  { time: "Q1.5", pnl: 8500 },
+                                  { time: "Q2", pnl: 12200 },
+                                  { time: "Q2.5", pnl: 15200 },
+                                  { time: "Q3", pnl: 18800 },
+                                  { time: "Q3.5", pnl: 22100 },
+                                  { time: "Q4", pnl: 25400 },
+                                  { time: "Q4.5", pnl: 28750 },
                                 ]
                       }
                       margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
                     >
-                      <XAxis
-                        dataKey="time"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 10, fill: "#6b7280" }}
-                      />
+                      <XAxis dataKey="time" axisLine={false} tickLine={false} tick={false} />
                       <YAxis hide />
                       <ChartTooltip
                         content={({ active, payload, label }) => {
@@ -308,12 +324,20 @@ export default function ReflectDashboard() {
                             const value = payload[0].value
                             const isPositive = value >= 0
                             return (
-                              <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md">
-                                <p className="text-sm font-medium text-gray-900">
-                                  {label}:{" "}
-                                  <span className={`font-bold ${isPositive ? "text-green-600" : "text-red-600"}`}>
+                              <div className="bg-gray-900 text-white p-3 rounded-lg shadow-lg border border-gray-700">
+                                <p className="text-sm font-bold">
+                                  <span className={`${isPositive ? "text-green-400" : "text-red-400"}`}>
                                     {isPositive ? "+" : ""}${Math.abs(value).toLocaleString()}
                                   </span>
+                                </p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  {pnlTimeframe === "day"
+                                    ? `Today ${label}`
+                                    : pnlTimeframe === "week"
+                                      ? `This week ${label}`
+                                      : pnlTimeframe === "month"
+                                        ? `This month ${label}`
+                                        : `All time ${label}`}
                                 </p>
                               </div>
                             )
@@ -321,26 +345,39 @@ export default function ReflectDashboard() {
                           return null
                         }}
                       />
+                      <defs>
+                        <linearGradient id="pnlGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#10b981" stopOpacity={0.1} />
+                          <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="pnlGradientNegative" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#ef4444" stopOpacity={0} />
+                          <stop offset="100%" stopColor="#ef4444" stopOpacity={0.1} />
+                        </linearGradient>
+                      </defs>
                       <Line
                         type="monotone"
                         dataKey="pnl"
-                        stroke={pnlData[pnlTimeframe].isPositive ? "#10b981" : "#ef4444"}
-                        strokeWidth={3}
+                        stroke="url(#pnlLineGradient)"
+                        strokeWidth={2}
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        dot={{
-                          fill: pnlData[pnlTimeframe].isPositive ? "#10b981" : "#ef4444",
-                          strokeWidth: 2,
+                        dot={false}
+                        activeDot={{
                           r: 4,
                           stroke: "#fff",
-                        }}
-                        activeDot={{
-                          r: 6,
-                          stroke: pnlData[pnlTimeframe].isPositive ? "#10b981" : "#ef4444",
                           strokeWidth: 2,
-                          fill: "#fff",
+                          fill: pnlData[pnlTimeframe].isPositive ? "#10b981" : "#ef4444",
                         }}
                       />
+                      <defs>
+                        <linearGradient id="pnlLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#ef4444" />
+                          <stop offset="60%" stopColor="#ef4444" />
+                          <stop offset="70%" stopColor="#10b981" />
+                          <stop offset="100%" stopColor="#10b981" />
+                        </linearGradient>
+                      </defs>
                     </LineChart>
                   </ResponsiveContainer>
                 </ChartContainer>
