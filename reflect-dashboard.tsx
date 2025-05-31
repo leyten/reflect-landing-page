@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from "recharts"
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import { useEffect, useRef, useState } from "react"
 
@@ -71,6 +71,74 @@ const pnlData = {
   total: { value: 28750, percentage: 12.4, isPositive: true },
 }
 
+// Generate more detailed PnL chart data
+const generateDetailedPnlData = (timeframe) => {
+  const now = new Date()
+
+  if (timeframe === "day") {
+    // Generate hourly data for today
+    return Array.from({ length: 24 }, (_, i) => {
+      const hour = i
+      const value = Math.sin(i / 3) * 1000 + Math.random() * 500 - 200 + i * 100
+      const date = new Date(now)
+      date.setHours(hour, 0, 0, 0)
+      return {
+        time: `${hour}:00`,
+        pnl: Math.round(value),
+        timestamp: date.toLocaleString(),
+        isPositive: value > 0,
+      }
+    })
+  } else if (timeframe === "week") {
+    // Generate data for each hour of the past 7 days
+    return Array.from({ length: 7 * 8 }, (_, i) => {
+      const day = Math.floor(i / 8)
+      const hour = (i % 8) * 3
+      const value = Math.sin(i / 5) * 2000 + Math.random() * 1000 - 500 + i * 50
+      const date = new Date(now)
+      date.setDate(date.getDate() - (6 - day))
+      date.setHours(hour, 0, 0, 0)
+      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+      return {
+        time: `${dayNames[date.getDay()]} ${hour}:00`,
+        pnl: Math.round(value),
+        timestamp: date.toLocaleString(),
+        isPositive: value > 0,
+      }
+    })
+  } else if (timeframe === "month") {
+    // Generate daily data for the past month
+    return Array.from({ length: 30 }, (_, i) => {
+      const day = i + 1
+      const value = Math.sin(i / 10) * 3000 + Math.cos(i / 5) * 2000 + i * 100 - 2000
+      const date = new Date(now)
+      date.setDate(date.getDate() - (30 - day))
+      return {
+        time: `${date.getMonth() + 1}/${date.getDate()}`,
+        pnl: Math.round(value),
+        timestamp: date.toLocaleString(),
+        isPositive: value > 0,
+      }
+    })
+  } else {
+    // Generate monthly data for the year
+    return Array.from({ length: 12 }, (_, i) => {
+      const month = i
+      const value = Math.sin(i / 2) * 5000 + Math.cos(i / 4) * 10000 + i * 1000
+      const date = new Date(now)
+      date.setMonth(month)
+      date.setDate(15)
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+      return {
+        time: monthNames[month],
+        pnl: Math.round(value),
+        timestamp: date.toLocaleString(),
+        isPositive: value > 0,
+      }
+    })
+  }
+}
+
 function useScrollAnimation() {
   const [isVisible, setIsVisible] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -109,6 +177,8 @@ export default function ReflectDashboard() {
   const [animatedScore, setAnimatedScore] = useState(0)
   const [timeframe, setTimeframe] = useState("weekly")
   const [pnlTimeframe, setPnlTimeframe] = useState("day")
+  const [detailedPnlData, setDetailedPnlData] = useState([])
+  const [activeTooltipIndex, setActiveTooltipIndex] = useState(null)
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -125,6 +195,10 @@ export default function ReflectDashboard() {
 
     return () => clearTimeout(timer)
   }, [])
+
+  useEffect(() => {
+    setDetailedPnlData(generateDetailedPnlData(pnlTimeframe))
+  }, [pnlTimeframe])
 
   const getTimeframeData = () => {
     switch (timeframe) {
@@ -251,136 +325,85 @@ export default function ReflectDashboard() {
 
               {/* PnL Graph */}
               <div className="flex flex-col items-center">
-                <ChartContainer
-                  config={{
-                    pnl: {
-                      label: "PnL",
-                      color: pnlData[pnlTimeframe].isPositive ? "#10b981" : "#ef4444",
-                    },
-                  }}
-                  className="h-[120px] w-full"
-                >
+                <div className="w-full h-[150px] bg-gray-900 rounded-xl overflow-hidden">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
-                      data={
-                        pnlTimeframe === "day"
-                          ? [
-                              { time: "9:00", pnl: 0 },
-                              { time: "9:15", pnl: -120 },
-                              { time: "9:30", pnl: -280 },
-                              { time: "9:45", pnl: -150 },
-                              { time: "10:00", pnl: 200 },
-                              { time: "10:15", pnl: 450 },
-                              { time: "10:30", pnl: 380 },
-                              { time: "10:45", pnl: 320 },
-                              { time: "11:00", pnl: 520 },
-                              { time: "11:15", pnl: 680 },
-                              { time: "11:30", pnl: 780 },
-                              { time: "11:45", pnl: 920 },
-                              { time: "12:00", pnl: 1240 },
-                            ]
-                          : pnlTimeframe === "week"
-                            ? [
-                                { time: "Mon", pnl: -450 },
-                                { time: "Mon PM", pnl: 320 },
-                                { time: "Tue", pnl: 1240 },
-                                { time: "Tue PM", pnl: 1850 },
-                                { time: "Wed", pnl: 2100 },
-                                { time: "Wed PM", pnl: 1950 },
-                                { time: "Thu", pnl: 2800 },
-                                { time: "Thu PM", pnl: 3200 },
-                                { time: "Fri", pnl: 4200 },
-                                { time: "Fri PM", pnl: 4850 },
-                              ]
-                            : pnlTimeframe === "month"
-                              ? [
-                                  { time: "W1", pnl: 4850 },
-                                  { time: "W1.5", pnl: 3200 },
-                                  { time: "W2", pnl: 2100 },
-                                  { time: "W2.5", pnl: 800 },
-                                  { time: "W3", pnl: -400 },
-                                  { time: "W3.5", pnl: -1200 },
-                                  { time: "W4", pnl: -1800 },
-                                  { time: "W4.5", pnl: -2340 },
-                                ]
-                              : [
-                                  { time: "Q1", pnl: 2500 },
-                                  { time: "Q1.5", pnl: 8500 },
-                                  { time: "Q2", pnl: 12200 },
-                                  { time: "Q2.5", pnl: 15200 },
-                                  { time: "Q3", pnl: 18800 },
-                                  { time: "Q3.5", pnl: 22100 },
-                                  { time: "Q4", pnl: 25400 },
-                                  { time: "Q4.5", pnl: 28750 },
-                                ]
-                      }
-                      margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                      data={detailedPnlData}
+                      margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                      onMouseMove={(e) => {
+                        if (e && e.activeTooltipIndex !== undefined) {
+                          setActiveTooltipIndex(e.activeTooltipIndex)
+                        }
+                      }}
+                      onMouseLeave={() => setActiveTooltipIndex(null)}
                     >
-                      <XAxis dataKey="time" axisLine={false} tickLine={false} tick={false} />
+                      <defs>
+                        <linearGradient id="colorPnl" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      {activeTooltipIndex !== null && (
+                        <ReferenceLine
+                          x={detailedPnlData[activeTooltipIndex]?.time}
+                          stroke="#ffffff"
+                          strokeDasharray="3 3"
+                          strokeOpacity={0.7}
+                        />
+                      )}
+                      <XAxis
+                        dataKey="time"
+                        tick={{ fill: "#9ca3af", fontSize: 10 }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
                       <YAxis hide />
                       <ChartTooltip
+                        cursor={false}
                         content={({ active, payload, label }) => {
                           if (active && payload && payload.length) {
                             const value = payload[0].value
                             const isPositive = value >= 0
+                            const timestamp = payload[0].payload.timestamp
                             return (
-                              <div className="bg-gray-900 text-white p-3 rounded-lg shadow-lg border border-gray-700">
-                                <p className="text-sm font-bold">
-                                  <span className={`${isPositive ? "text-green-400" : "text-red-400"}`}>
-                                    {isPositive ? "+" : ""}${Math.abs(value).toLocaleString()}
-                                  </span>
+                              <div className="bg-gray-800 p-3 border border-gray-700 rounded-lg shadow-md">
+                                <p className={`text-lg font-bold ${isPositive ? "text-green-400" : "text-pink-500"}`}>
+                                  {isPositive ? "+" : ""}${Math.abs(value).toLocaleString()}
                                 </p>
-                                <p className="text-xs text-gray-400 mt-1">
-                                  {pnlTimeframe === "day"
-                                    ? `Today ${label}`
-                                    : pnlTimeframe === "week"
-                                      ? `This week ${label}`
-                                      : pnlTimeframe === "month"
-                                        ? `This month ${label}`
-                                        : `All time ${label}`}
-                                </p>
+                                <p className="text-xs text-gray-400 mt-1">{timestamp}</p>
                               </div>
                             )
                           }
                           return null
                         }}
                       />
-                      <defs>
-                        <linearGradient id="pnlGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#10b981" stopOpacity={0.1} />
-                          <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="pnlGradientNegative" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#ef4444" stopOpacity={0} />
-                          <stop offset="100%" stopColor="#ef4444" stopOpacity={0.1} />
-                        </linearGradient>
-                      </defs>
                       <Line
                         type="monotone"
                         dataKey="pnl"
-                        stroke="url(#pnlLineGradient)"
+                        stroke="#10b981"
                         strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
                         dot={false}
                         activeDot={{
-                          r: 4,
-                          stroke: "#fff",
+                          r: 6,
+                          stroke: "#10b981",
                           strokeWidth: 2,
-                          fill: pnlData[pnlTimeframe].isPositive ? "#10b981" : "#ef4444",
+                          fill: "#111827",
+                        }}
+                        strokeDasharray={null}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        isAnimationActive={true}
+                        animationDuration={1000}
+                        animationEasing="ease-in-out"
+                        connectNulls={true}
+                        strokeGradient={{
+                          positive: "#10b981",
+                          negative: "#ec4899",
                         }}
                       />
-                      <defs>
-                        <linearGradient id="pnlLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#ef4444" />
-                          <stop offset="60%" stopColor="#ef4444" />
-                          <stop offset="70%" stopColor="#10b981" />
-                          <stop offset="100%" stopColor="#10b981" />
-                        </linearGradient>
-                      </defs>
                     </LineChart>
                   </ResponsiveContainer>
-                </ChartContainer>
+                </div>
 
                 <div className="mt-4 text-center">
                   <div className="flex items-baseline justify-center">
