@@ -182,7 +182,7 @@ export default function Home() {
           <PartnersMarquee />
 
           {/* Trading Dashboard Preview */}
-          <div className="mb-16"></div>
+          <div className="mb-24"></div>
           <AnimatedSection animation="fade-up" delay={200}>
             <div className="relative max-w-6xl mx-auto">
               <div className="absolute inset-0 bg-gradient-to-r from-[#f8d300]/20 to-[#f8d300]/20 via-white/30 rounded-[2rem] blur-3xl transform -translate-y-4"></div>

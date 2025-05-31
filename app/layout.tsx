@@ -24,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} bg-[#f8d300]`}>
+      <body className={`${inter.className}`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <PrivyProviderWrapper>{children}</PrivyProviderWrapper>
         </ThemeProvider>

@@ -57,8 +57,14 @@ html {
 }
 
 .fixed-width-container {
-  width: 140px; /* Match the button width */
+  width: 140px; /* Mobile width */
   display: inline-block;
+}
+
+@media (min-width: 768px) {
+  .fixed-width-container {
+    width: 160px; /* Desktop width */
+  }
 }
 
 @layer base {

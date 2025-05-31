@@ -27,9 +27,9 @@ export default function AnimatedHeadline({ staticText, changingWords, interval =
 
   return (
     <div className="flex justify-center w-full">
-      <div className="flex items-center text-6xl md:text-7xl font-medium text-zinc-900 tracking-tight">
+      <div className="flex items-center text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-medium text-zinc-900 tracking-tight">
         <div className="text-left">{staticText}&nbsp;</div>
-        <div className="w-[240px] text-left">
+        <div className="w-[160px] sm:w-[200px] md:w-[240px] text-left">
           <span
             className={`
               inline-block transition-all duration-300 ease-in-out

@@ -28,7 +28,7 @@ export default function PrivyProviderWrapper({
           theme: "light",
           accentColor: "#f8d300",
         },
-        loginMethods: ["wallet", "email"],
+        loginMethods: ["wallet", "email", "twitter"],
       }}
     >
       {children}
