@@ -25,37 +25,39 @@ export default function TradeFrequencyHeatmap({ isVisible }: TradeFrequencyHeatm
         <CardDescription>When you trade most actively</CardDescription>
       </CardHeader>
       <CardContent className="pb-4 h-full flex flex-col">
-        <div className="flex-1 flex flex-col justify-center items-center">
-          {heatmapData.map((row, i) => (
-            <div key={i} className="flex items-center space-x-2">
-              <div className="w-10 text-xs text-gray-500 font-medium text-right">{row.time}</div>
-              <div className="flex space-x-1">
-                {Object.entries(row)
-                  .slice(1)
-                  .map(([day, value]) => (
-                    <div
-                      key={day}
-                      className="w-8 h-8 rounded-md flex items-center justify-center text-xs font-bold transition-transform duration-200 shadow-sm"
-                      style={{
-                        backgroundColor:
-                          value === 0 ? "#f5f5f5" : value <= 2 ? "#fef3cd" : value <= 3 ? "#f8d300" : "#e6c200",
-                        color: value > 2 ? "#000" : "#666",
-                      }}
-                    >
-                      {value || ""}
-                    </div>
-                  ))}
-              </div>
-            </div>
-          ))}
-          <div className="flex items-center space-x-2">
-            <div className="w-10"></div>
-            <div className="flex space-x-1 text-xs text-gray-500 font-medium">
-              {["M", "T", "W", "T", "F", "S", "S"].map((day, i) => (
-                <div key={i} className="w-8 text-center">
-                  {day}
+        <div className="flex-1 flex flex-col justify-center">
+          <div className="space-y-3">
+            {heatmapData.map((row, i) => (
+              <div key={i} className="flex items-center space-x-2">
+                <div className="w-10 text-xs text-gray-500 font-medium text-right">{row.time}</div>
+                <div className="flex space-x-1">
+                  {Object.entries(row)
+                    .slice(1)
+                    .map(([day, value]) => (
+                      <div
+                        key={day}
+                        className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold transition-transform duration-200 shadow-sm"
+                        style={{
+                          backgroundColor:
+                            value === 0 ? "#f5f5f5" : value <= 2 ? "#fef3cd" : value <= 3 ? "#f8d300" : "#e6c200",
+                          color: value > 2 ? "#000" : "#666",
+                        }}
+                      >
+                        {value || ""}
+                      </div>
+                    ))}
                 </div>
-              ))}
+              </div>
+            ))}
+            <div className="flex items-center space-x-2 mt-4">
+              <div className="w-10"></div>
+              <div className="flex space-x-1 text-xs text-gray-500 font-medium">
+                {["M", "T", "W", "T", "F", "S", "S"].map((day, i) => (
+                  <div key={i} className="w-6 text-center">
+                    {day}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
