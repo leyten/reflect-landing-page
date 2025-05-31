@@ -49,7 +49,7 @@ export default function Home() {
   const currentData = dashboardData[timeframe]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f8d300] to-[#f8d300] via-[#fff8d9]">
+    <div className="min-h-screen bg-gradient-to-b from-[#f8d300] via-white via-25% to-white">
       <Header />
 
       {/* Hero Section */}
@@ -179,7 +179,10 @@ export default function Home() {
             </div>
           </div>
 
+          <PartnersMarquee />
+
           {/* Trading Dashboard Preview */}
+          <div className="mb-16"></div>
           <AnimatedSection animation="fade-up" delay={200}>
             <div className="relative max-w-6xl mx-auto">
               <div className="absolute inset-0 bg-gradient-to-r from-[#f8d300]/20 to-[#f8d300]/20 via-white/30 rounded-[2rem] blur-3xl transform -translate-y-4"></div>
@@ -308,8 +311,6 @@ export default function Home() {
           </AnimatedSection>
         </div>
       </section>
-
-      <PartnersMarquee />
 
       <WhyUseReflect />
 
