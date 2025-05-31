@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { PrivyProvider } from "@privy-io/react-auth"
+import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana"
 
 export default function PrivyProviderWrapper({
   children,
@@ -18,10 +19,16 @@ export default function PrivyProviderWrapper({
             createOnLogin: "users-without-wallets",
           },
         },
+        externalWallets: {
+          solana: {
+            connectors: toSolanaWalletConnectors(),
+          },
+        },
         appearance: {
           theme: "light",
           accentColor: "#f8d300",
         },
+        loginMethods: ["wallet", "email"],
       }}
     >
       {children}

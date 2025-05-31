@@ -12,7 +12,7 @@ import Link from "next/link"
 
 export default function SettingsPage() {
   const { user, logout, linkWallet, unlinkWallet } = usePrivy()
-  const { wallets: solanaWallets, exportWallet: exportSolWallet } = useSolanaWallets()
+  const { wallets: solanaWallets, ready: walletsReady, exportWallet: exportSolWallet } = useSolanaWallets()
   const [showPrivateKey, setShowPrivateKey] = useState<string | null>(null)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [exportingWallet, setExportingWallet] = useState<string | null>(null)
@@ -41,7 +41,6 @@ export default function SettingsPage() {
 
       // Export Solana wallet private key
       const privateKey = await exportSolWallet(wallet)
-
     } catch (error) {
       console.error("Failed to export wallet:", error)
       alert("Failed to export wallet. Please try again.")
@@ -133,8 +132,8 @@ export default function SettingsPage() {
               <Separator />
 
               <div className="space-y-2">
-                <Button variant="outline" className="w-full" onClick={() => linkWallet()}>
-                  Link Additional Wallet
+                <Button variant="outline" className="w-full" onClick={() => linkWallet()} disabled={!walletsReady}>
+                  {!walletsReady ? "Discovering wallets..." : "Link Additional Wallet"}
                 </Button>
                 <Button variant="destructive" className="w-full" onClick={logout}>
                   Logout
@@ -155,6 +154,7 @@ export default function SettingsPage() {
             <CardContent>
               <div className="space-y-4">
                 {/* Solana Wallets */}
+                {!walletsReady && <div className="text-sm text-gray-500 mb-4">Discovering available wallets...</div>}
                 {solanaWallets.length > 0 ? (
                   solanaWallets.map((wallet) => (
                     <div key={wallet.address} className="border rounded-lg p-4 space-y-3">
