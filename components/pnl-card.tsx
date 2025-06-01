@@ -77,13 +77,38 @@ const generateDetailedPnlData = (timeframe: string) => {
   }
 }
 
-// Create separate data arrays for positive and negative values
-const createColoredData = (data: any[]) => {
-  return data.map((point) => ({
-    ...point,
-    pnlPositive: point.pnl >= 0 ? point.pnl : null,
-    pnlNegative: point.pnl < 0 ? point.pnl : null,
-  }))
+// Process data to create connection points at zero crossings
+const processDataForConnectedLines = (data: any[]) => {
+  const result = []
+
+  for (let i = 0; i < data.length; i++) {
+    const current = data[i]
+    result.push({
+      ...current,
+      pnlPositive: current.pnl >= 0 ? current.pnl : null,
+      pnlNegative: current.pnl < 0 ? current.pnl : null,
+    })
+
+    // If this is not the last point and there's a sign change, add a zero crossing point
+    if (i < data.length - 1) {
+      const next = data[i + 1]
+      if ((current.pnl >= 0 && next.pnl < 0) || (current.pnl < 0 && next.pnl >= 0)) {
+        // Calculate the time value for the zero crossing (simple linear interpolation)
+        const ratio = Math.abs(current.pnl) / (Math.abs(current.pnl) + Math.abs(next.pnl))
+        const zeroPoint = {
+          time: current.time + " → " + next.time, // Just for debugging, not displayed
+          pnl: 0,
+          timestamp: "Zero crossing",
+          pnlPositive: 0,
+          pnlNegative: 0,
+          isZeroCrossing: true,
+        }
+        result.push(zeroPoint)
+      }
+    }
+  }
+
+  return result
 }
 
 export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
@@ -92,7 +117,7 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
 
   useEffect(() => {
     const rawData = generateDetailedPnlData(pnlTimeframe)
-    setDetailedPnlData(createColoredData(rawData))
+    setDetailedPnlData(processDataForConnectedLines(rawData))
   }, [pnlTimeframe])
 
   return (
@@ -151,13 +176,25 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
             <div className="w-full h-[150px] overflow-hidden">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={detailedPnlData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                  <XAxis dataKey="time" tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <XAxis
+                    dataKey="time"
+                    tick={{ fill: "#6b7280", fontSize: 10 }}
+                    axisLine={false}
+                    tickLine={false}
+                    // Don't show ticks for zero crossing points
+                    tickFormatter={(value, index) => {
+                      return detailedPnlData[index]?.isZeroCrossing ? "" : value
+                    }}
+                  />
                   <YAxis hide />
                   <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
                   <ChartTooltip
                     cursor={false}
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
+                        // Don't show tooltip for zero crossing points
+                        if (payload[0].payload.isZeroCrossing) return null
+
                         const pnlValue = payload[0].payload.pnl
                         const isPositive = pnlValue >= 0
                         const timestamp = payload[0].payload.timestamp
@@ -182,8 +219,12 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                     stroke="#10b981"
                     strokeWidth={3}
                     dot={false}
-                    activeDot={{ r: 6, stroke: "#10b981", strokeWidth: 2, fill: "#ffffff" }}
-                    connectNulls={false}
+                    activeDot={({ dataKey, cx, cy, stroke, payload }) => {
+                      // Don't show active dot for zero crossing points
+                      if (payload.isZeroCrossing) return null
+                      return <circle cx={cx} cy={cy} r={6} stroke="#10b981" strokeWidth={2} fill="#ffffff" />
+                    }}
+                    connectNulls={true}
                   />
 
                   {/* Red line for negative values */}
@@ -193,8 +234,12 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                     stroke="#ef4444"
                     strokeWidth={3}
                     dot={false}
-                    activeDot={{ r: 6, stroke: "#ef4444", strokeWidth: 2, fill: "#ffffff" }}
-                    connectNulls={false}
+                    activeDot={({ dataKey, cx, cy, stroke, payload }) => {
+                      // Don't show active dot for zero crossing points
+                      if (payload.isZeroCrossing) return null
+                      return <circle cx={cx} cy={cy} r={6} stroke="#ef4444" strokeWidth={2} fill="#ffffff" />
+                    }}
+                    connectNulls={true}
                   />
                 </LineChart>
               </ResponsiveContainer>
