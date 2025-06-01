@@ -8,13 +8,6 @@ interface PnLCardProps {
   walletAddress?: string
 }
 
-const pnlData = {
-  day: { value: 1240, percentage: 3.2, isPositive: true, winRate: 68 },
-  week: { value: 4850, percentage: 7.8, isPositive: true, winRate: 72 },
-  month: { value: -2340, percentage: -1.5, isPositive: false, winRate: 45 },
-  total: { value: 28750, percentage: 12.4, isPositive: true, winRate: 65 },
-}
-
 const buyData = {
   day: { amount: 12450, trades: 8 },
   week: { amount: 48200, trades: 23 },
@@ -23,18 +16,40 @@ const buyData = {
 }
 
 const sellData = {
-  day: { amount: 11210, trades: 6 },
-  week: { amount: 43350, trades: 19 },
-  month: { amount: 159140, trades: 92 },
-  total: { amount: 1211250, trades: 1198 },
+  day: { amount: 13690, trades: 6 }, // Higher than buy for profit
+  week: { amount: 53050, trades: 19 }, // Higher than buy for profit
+  month: { amount: 154460, trades: 92 }, // Lower than buy for loss
+  total: { amount: 1268750, trades: 1198 }, // Higher than buy for profit
+}
+
+// Calculate PnL correctly: sell - buy
+const calculatePnL = (timeframe: string) => {
+  const buy = buyData[timeframe as keyof typeof buyData]
+  const sell = sellData[timeframe as keyof typeof sellData]
+  const pnl = sell.amount - buy.amount
+  const percentage = (pnl / buy.amount) * 100
+
+  return {
+    value: pnl,
+    percentage: Number(percentage.toFixed(1)),
+    isPositive: pnl >= 0,
+  }
+}
+
+const winRates = {
+  day: 68,
+  week: 72,
+  month: 45,
+  total: 65,
 }
 
 export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
   const [pnlTimeframe, setPnlTimeframe] = useState("day")
 
-  const currentPnL = pnlData[pnlTimeframe as keyof typeof pnlData]
+  const currentPnL = calculatePnL(pnlTimeframe)
   const currentBuy = buyData[pnlTimeframe as keyof typeof buyData]
   const currentSell = sellData[pnlTimeframe as keyof typeof sellData]
+  const currentWinRate = winRates[pnlTimeframe as keyof typeof winRates]
 
   return (
     <Card
@@ -80,35 +95,35 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
               {currentPnL.percentage}%
             </span>
           </div>
-          <div className="text-gray-600 text-sm">Net Profit & Loss</div>
+          <div className="text-gray-600 text-sm">Net Profit & Loss (Sell - Buy)</div>
         </div>
 
         {/* Buy/Sell Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Total Buy */}
-          <div className="bg-green-50 rounded-2xl p-6 border border-green-100">
+          <div className="bg-red-50 rounded-2xl p-6 border border-red-100">
             <div className="flex items-center justify-between mb-3">
-              <div className="text-green-700 font-semibold text-sm uppercase tracking-wide">Total Buy</div>
-              <div className="bg-green-200 text-green-800 px-2 py-1 rounded-full text-xs font-bold">
+              <div className="text-red-700 font-semibold text-sm uppercase tracking-wide">Total Buy</div>
+              <div className="bg-red-200 text-red-800 px-2 py-1 rounded-full text-xs font-bold">
                 {currentBuy.trades} trades
               </div>
             </div>
-            <div className="text-3xl font-black text-green-600 mb-1">${currentBuy.amount.toLocaleString()}</div>
-            <div className="text-green-600 text-sm">
+            <div className="text-3xl font-black text-red-600 mb-1">${currentBuy.amount.toLocaleString()}</div>
+            <div className="text-red-600 text-sm">
               Avg: ${Math.round(currentBuy.amount / currentBuy.trades).toLocaleString()} per trade
             </div>
           </div>
 
           {/* Total Sell */}
-          <div className="bg-red-50 rounded-2xl p-6 border border-red-100">
+          <div className="bg-green-50 rounded-2xl p-6 border border-green-100">
             <div className="flex items-center justify-between mb-3">
-              <div className="text-red-700 font-semibold text-sm uppercase tracking-wide">Total Sell</div>
-              <div className="bg-red-200 text-red-800 px-2 py-1 rounded-full text-xs font-bold">
+              <div className="text-green-700 font-semibold text-sm uppercase tracking-wide">Total Sell</div>
+              <div className="bg-green-200 text-green-800 px-2 py-1 rounded-full text-xs font-bold">
                 {currentSell.trades} trades
               </div>
             </div>
-            <div className="text-3xl font-black text-red-600 mb-1">${currentSell.amount.toLocaleString()}</div>
-            <div className="text-red-600 text-sm">
+            <div className="text-3xl font-black text-green-600 mb-1">${currentSell.amount.toLocaleString()}</div>
+            <div className="text-green-600 text-sm">
               Avg: ${Math.round(currentSell.amount / currentSell.trades).toLocaleString()} per trade
             </div>
           </div>
@@ -119,16 +134,16 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-yellow-800 font-semibold text-sm uppercase tracking-wide mb-2">Win Rate</div>
-              <div className="text-4xl font-black text-yellow-600 mb-1">{currentPnL.winRate}%</div>
+              <div className="text-4xl font-black text-yellow-600 mb-1">{currentWinRate}%</div>
               <div className="text-yellow-700 text-sm">
-                {Math.round((currentBuy.trades + currentSell.trades) * (currentPnL.winRate / 100))} winning trades
+                {Math.round((currentBuy.trades + currentSell.trades) * (currentWinRate / 100))} winning trades
               </div>
             </div>
             <div className="text-right">
               <div className="text-yellow-800 font-semibold text-sm uppercase tracking-wide mb-2">Total Trades</div>
               <div className="text-3xl font-black text-yellow-600 mb-1">{currentBuy.trades + currentSell.trades}</div>
               <div className="text-yellow-700 text-sm">
-                {Math.round((currentBuy.trades + currentSell.trades) * (1 - currentPnL.winRate / 100))} losing trades
+                {Math.round((currentBuy.trades + currentSell.trades) * (1 - currentWinRate / 100))} losing trades
               </div>
             </div>
           </div>
@@ -142,7 +157,7 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
             <div className="h-3 bg-yellow-200 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full transition-all duration-500"
-                style={{ width: `${currentPnL.winRate}%` }}
+                style={{ width: `${currentWinRate}%` }}
               ></div>
             </div>
           </div>
