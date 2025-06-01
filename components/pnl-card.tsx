@@ -60,24 +60,29 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
 
   return (
     <Card
-      className={`mb-10 bg-white/90 backdrop-blur-sm shadow-xl border-0 rounded-3xl transition-all duration-700 hover:shadow-2xl hover:scale-[1.01] ${
+      className={`mb-10 bg-white/80 backdrop-blur-lg shadow-2xl border border-white/20 rounded-3xl transition-all duration-700 hover:shadow-3xl hover:scale-[1.02] hover:bg-white/85 ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       }`}
     >
       <CardContent className="p-6 relative overflow-hidden">
-        {/* Subtle animated background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-green-50/30 via-transparent to-red-50/20 animate-pulse duration-[7000ms]"></div>
+        {/* Enhanced animated background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-green-100/50 via-yellow-50/40 to-red-100/30 animate-pulse duration-[6000ms]"></div>
+
+        {/* Shimmer effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-pulse duration-[4000ms] delay-1000"></div>
 
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Trading Overview</h2>
-            <div className="flex items-center space-x-1 bg-gray-50/80 backdrop-blur-sm rounded-lg p-1">
+            <h2 className="text-xl font-bold text-gray-900 drop-shadow-sm">Trading Overview</h2>
+            <div className="flex items-center space-x-1 bg-white/60 backdrop-blur-sm rounded-lg p-1 border border-white/30">
               {["day", "week", "month", "total"].map((option) => (
                 <button
                   key={option}
                   onClick={() => setPnlTimeframe(option)}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 hover:scale-105 ${
-                    pnlTimeframe === option ? "bg-yellow-500 text-black shadow-md" : "text-gray-600 hover:text-gray-900"
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-300 hover:scale-110 ${
+                    pnlTimeframe === option
+                      ? "bg-gradient-to-r from-yellow-400 to-yellow-600 text-black shadow-lg transform scale-105"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
                   }`}
                 >
                   {option === "total" ? "All Time" : option.charAt(0).toUpperCase() + option.slice(1)}
@@ -99,12 +104,16 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
             </div>
             <div className="flex items-baseline justify-center mb-1">
               <span
-                className={`text-4xl font-black transition-colors duration-300 ${currentPnL.isPositive ? "text-green-600" : "text-red-600"}`}
+                className={`text-4xl font-black transition-all duration-500 drop-shadow-lg ${
+                  currentPnL.isPositive ? "text-green-600" : "text-red-600"
+                }`}
               >
                 {currentPnL.isPositive ? "+" : ""}${Math.abs(currentPnL.value).toLocaleString()}
               </span>
               <span
-                className={`ml-2 text-xl font-bold transition-colors duration-300 ${currentPnL.isPositive ? "text-green-600" : "text-red-600"}`}
+                className={`ml-2 text-xl font-bold transition-all duration-500 ${
+                  currentPnL.isPositive ? "text-green-600" : "text-red-600"
+                }`}
               >
                 {currentPnL.isPositive ? "+" : ""}
                 {currentPnL.percentage}%
@@ -116,42 +125,46 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
           {/* Compact 3-Column Layout */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Total Buy */}
-            <div className="bg-red-50/80 backdrop-blur-sm rounded-xl p-4 border border-red-100 transition-all duration-200 hover:bg-red-100/80 hover:scale-105">
+            <div className="bg-red-100/70 backdrop-blur-sm rounded-xl p-4 border border-red-200/50 transition-all duration-300 hover:bg-red-200/70 hover:scale-110 hover:shadow-xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-red-700 font-semibold text-xs uppercase tracking-wide">Buy</div>
-                <div className="bg-red-200 text-red-800 px-2 py-0.5 rounded-full text-xs font-bold">
+                <div className="bg-red-200 text-red-800 px-2 py-0.5 rounded-full text-xs font-bold shadow-sm">
                   {currentBuy.transactions}
                 </div>
               </div>
-              <div className="text-2xl font-black text-red-600 mb-1">${currentBuy.amount.toLocaleString()}</div>
+              <div className="text-2xl font-black text-red-600 mb-1 drop-shadow-sm">
+                ${currentBuy.amount.toLocaleString()}
+              </div>
               <div className="text-red-600 text-xs">
                 ${Math.round(currentBuy.amount / currentBuy.transactions).toLocaleString()} avg
               </div>
             </div>
 
             {/* Total Sell */}
-            <div className="bg-green-50/80 backdrop-blur-sm rounded-xl p-4 border border-green-100 transition-all duration-200 hover:bg-green-100/80 hover:scale-105">
+            <div className="bg-green-100/70 backdrop-blur-sm rounded-xl p-4 border border-green-200/50 transition-all duration-300 hover:bg-green-200/70 hover:scale-110 hover:shadow-xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-green-700 font-semibold text-xs uppercase tracking-wide">Sell</div>
-                <div className="bg-green-200 text-green-800 px-2 py-0.5 rounded-full text-xs font-bold">
+                <div className="bg-green-200 text-green-800 px-2 py-0.5 rounded-full text-xs font-bold shadow-sm">
                   {currentSell.transactions}
                 </div>
               </div>
-              <div className="text-2xl font-black text-green-600 mb-1">${currentSell.amount.toLocaleString()}</div>
+              <div className="text-2xl font-black text-green-600 mb-1 drop-shadow-sm">
+                ${currentSell.amount.toLocaleString()}
+              </div>
               <div className="text-green-600 text-xs">
                 ${Math.round(currentSell.amount / currentSell.transactions).toLocaleString()} avg
               </div>
             </div>
 
             {/* Win Rate */}
-            <div className="bg-gradient-to-r from-yellow-50/80 to-yellow-100/80 backdrop-blur-sm rounded-xl p-4 border border-yellow-300 transition-all duration-200 hover:from-yellow-100/80 hover:to-yellow-200/80 hover:scale-105">
+            <div className="bg-gradient-to-r from-yellow-100/70 to-yellow-200/70 backdrop-blur-sm rounded-xl p-4 border border-yellow-300/50 transition-all duration-300 hover:from-yellow-200/70 hover:to-yellow-300/70 hover:scale-110 hover:shadow-xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-yellow-800 font-semibold text-xs uppercase tracking-wide">Win Rate</div>
-                <div className="bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded-full text-xs font-bold">
+                <div className="bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded-full text-xs font-bold shadow-sm">
                   {currentTrade.total}
                 </div>
               </div>
-              <div className="text-2xl font-black text-yellow-500 mb-1">{currentWinRate}%</div>
+              <div className="text-2xl font-black text-yellow-600 mb-1 drop-shadow-sm">{currentWinRate}%</div>
               <div className="text-yellow-700 text-xs">
                 {currentTrade.winning}W / {currentTrade.total - currentTrade.winning}L
               </div>
