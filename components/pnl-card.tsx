@@ -9,17 +9,24 @@ interface PnLCardProps {
 }
 
 const buyData = {
-  day: { amount: 12450, trades: 8 },
-  week: { amount: 48200, trades: 23 },
-  month: { amount: 156800, trades: 89 },
-  total: { amount: 1240000, trades: 1247 },
+  day: { amount: 12450, transactions: 14 },
+  week: { amount: 48200, transactions: 42 },
+  month: { amount: 156800, transactions: 137 },
+  total: { amount: 1240000, transactions: 2134 },
 }
 
 const sellData = {
-  day: { amount: 13690, trades: 6 }, // Higher than buy for profit
-  week: { amount: 53050, trades: 19 }, // Higher than buy for profit
-  month: { amount: 154460, trades: 92 }, // Lower than buy for loss
-  total: { amount: 1268750, trades: 1198 }, // Higher than buy for profit
+  day: { amount: 13690, transactions: 11 },
+  week: { amount: 53050, transactions: 38 },
+  month: { amount: 154460, transactions: 129 },
+  total: { amount: 1268750, transactions: 1986 },
+}
+
+const tradeData = {
+  day: { total: 8, winning: 5 },
+  week: { total: 23, winning: 17 },
+  month: { total: 89, winning: 40 },
+  total: { total: 1247, winning: 810 },
 }
 
 // Calculate PnL correctly: sell - buy
@@ -36,11 +43,10 @@ const calculatePnL = (timeframe: string) => {
   }
 }
 
-const winRates = {
-  day: 68,
-  week: 72,
-  month: 45,
-  total: 65,
+// Calculate win rate based on trades, not transactions
+const calculateWinRate = (timeframe: string) => {
+  const trade = tradeData[timeframe as keyof typeof tradeData]
+  return Math.round((trade.winning / trade.total) * 100)
 }
 
 export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
@@ -49,7 +55,8 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
   const currentPnL = calculatePnL(pnlTimeframe)
   const currentBuy = buyData[pnlTimeframe as keyof typeof buyData]
   const currentSell = sellData[pnlTimeframe as keyof typeof sellData]
-  const currentWinRate = winRates[pnlTimeframe as keyof typeof winRates]
+  const currentTrade = tradeData[pnlTimeframe as keyof typeof tradeData]
+  const currentWinRate = calculateWinRate(pnlTimeframe)
 
   return (
     <Card
@@ -105,12 +112,12 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
             <div className="flex items-center justify-between mb-3">
               <div className="text-red-700 font-semibold text-sm uppercase tracking-wide">Total Buy</div>
               <div className="bg-red-200 text-red-800 px-2 py-1 rounded-full text-xs font-bold">
-                {currentBuy.trades} trades
+                {currentBuy.transactions} transactions
               </div>
             </div>
             <div className="text-3xl font-black text-red-600 mb-1">${currentBuy.amount.toLocaleString()}</div>
             <div className="text-red-600 text-sm">
-              Avg: ${Math.round(currentBuy.amount / currentBuy.trades).toLocaleString()} per trade
+              Avg: ${Math.round(currentBuy.amount / currentBuy.transactions).toLocaleString()} per transaction
             </div>
           </div>
 
@@ -119,12 +126,12 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
             <div className="flex items-center justify-between mb-3">
               <div className="text-green-700 font-semibold text-sm uppercase tracking-wide">Total Sell</div>
               <div className="bg-green-200 text-green-800 px-2 py-1 rounded-full text-xs font-bold">
-                {currentSell.trades} trades
+                {currentSell.transactions} transactions
               </div>
             </div>
             <div className="text-3xl font-black text-green-600 mb-1">${currentSell.amount.toLocaleString()}</div>
             <div className="text-green-600 text-sm">
-              Avg: ${Math.round(currentSell.amount / currentSell.trades).toLocaleString()} per trade
+              Avg: ${Math.round(currentSell.amount / currentSell.transactions).toLocaleString()} per transaction
             </div>
           </div>
         </div>
@@ -135,16 +142,12 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
             <div>
               <div className="text-yellow-800 font-semibold text-sm uppercase tracking-wide mb-2">Win Rate</div>
               <div className="text-4xl font-black text-yellow-600 mb-1">{currentWinRate}%</div>
-              <div className="text-yellow-700 text-sm">
-                {Math.round((currentBuy.trades + currentSell.trades) * (currentWinRate / 100))} winning trades
-              </div>
+              <div className="text-yellow-700 text-sm">{currentTrade.winning} winning trades</div>
             </div>
             <div className="text-right">
               <div className="text-yellow-800 font-semibold text-sm uppercase tracking-wide mb-2">Total Trades</div>
-              <div className="text-3xl font-black text-yellow-600 mb-1">{currentBuy.trades + currentSell.trades}</div>
-              <div className="text-yellow-700 text-sm">
-                {Math.round((currentBuy.trades + currentSell.trades) * (1 - currentWinRate / 100))} losing trades
-              </div>
+              <div className="text-3xl font-black text-yellow-600 mb-1">{currentTrade.total}</div>
+              <div className="text-yellow-700 text-sm">{currentTrade.total - currentTrade.winning} losing trades</div>
             </div>
           </div>
 
