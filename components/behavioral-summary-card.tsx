@@ -6,11 +6,12 @@ interface BehavioralSummaryCardProps {
   isVisible: boolean
 }
 
-const behavioralData = [
-  { text: "Overtraded after losses (3 times)", color: "bg-red-500" },
-  { text: "Healthy pause after 2 red trades", color: "bg-yellow-500" },
-  { text: "Maintained consistent sizing", color: "bg-green-500" },
-  { text: "Improved weekend discipline", color: "bg-blue-500" },
+// Replace the behavioral data with advice data
+const adviceData = [
+  { text: "Take a break after consecutive losses", color: "bg-yellow-500" },
+  { text: "Consider reducing position sizes", color: "bg-blue-500" },
+  { text: "Set stop losses before entering trades", color: "bg-green-500" },
+  { text: "Review your trades on weekends", color: "bg-purple-500" },
 ]
 
 export default function BehavioralSummaryCard({ isVisible }: BehavioralSummaryCardProps) {
@@ -21,10 +22,10 @@ export default function BehavioralSummaryCard({ isVisible }: BehavioralSummaryCa
       }`}
     >
       <CardHeader className="pb-2 pt-6 px-6">
-        <CardTitle className="text-xl font-bold text-gray-900">This Week's Summary</CardTitle>
+        <CardTitle className="text-xl font-bold text-gray-900">Trading Advice</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 px-6 pb-6">
-        {behavioralData.map((item, i) => (
+        {adviceData.map((item, i) => (
           <div
             key={i}
             className="flex items-start space-x-4 p-3 rounded-xl transition-colors duration-200 cursor-pointer"
