@@ -93,16 +93,27 @@ const processDataForConnectedLines = (data: any[]) => {
     if (i < data.length - 1) {
       const next = data[i + 1]
       if ((current.pnl >= 0 && next.pnl < 0) || (current.pnl < 0 && next.pnl >= 0)) {
-        // Add zero crossing point for BOTH lines to ensure connection
+        // Add zero crossing point only for the line that's ending
         const zeroPoint = {
           time: current.time + " → " + next.time,
           pnl: 0,
           timestamp: "Zero crossing",
-          pnlPositive: 0, // Both lines get the zero point
-          pnlNegative: 0, // Both lines get the zero point
+          pnlPositive: current.pnl >= 0 ? 0 : null, // Only if coming from positive
+          pnlNegative: current.pnl < 0 ? 0 : null, // Only if coming from negative
           isZeroCrossing: true,
         }
         result.push(zeroPoint)
+
+        // Add another zero crossing point for the line that's starting
+        const zeroPoint2 = {
+          time: current.time + " → " + next.time,
+          pnl: 0,
+          timestamp: "Zero crossing",
+          pnlPositive: next.pnl >= 0 ? 0 : null, // Only if going to positive
+          pnlNegative: next.pnl < 0 ? 0 : null, // Only if going to negative
+          isZeroCrossing: true,
+        }
+        result.push(zeroPoint2)
       }
     }
   }
