@@ -96,11 +96,11 @@ const processDataForConnectedLines = (data: any[]) => {
         // Calculate the time value for the zero crossing (simple linear interpolation)
         const ratio = Math.abs(current.pnl) / (Math.abs(current.pnl) + Math.abs(next.pnl))
         const zeroPoint = {
-          time: current.time + " → " + next.time, // Just for debugging, not displayed
+          time: current.time + " → " + next.time,
           pnl: 0,
           timestamp: "Zero crossing",
-          pnlPositive: 0,
-          pnlNegative: 0,
+          pnlPositive: current.pnl >= 0 ? 0 : null,
+          pnlNegative: current.pnl < 0 ? 0 : null,
           isZeroCrossing: true,
         }
         result.push(zeroPoint)
@@ -223,7 +223,7 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                       if (payload.isZeroCrossing) return null
                       return <circle cx={cx} cy={cy} r={6} stroke="#10b981" strokeWidth={2} fill="#ffffff" />
                     }}
-                    connectNulls={true}
+                    connectNulls={false}
                   />
 
                   {/* Red line for negative values */}
@@ -238,7 +238,7 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                       if (payload.isZeroCrossing) return null
                       return <circle cx={cx} cy={cy} r={6} stroke="#ef4444" strokeWidth={2} fill="#ffffff" />
                     }}
-                    connectNulls={true}
+                    connectNulls={false}
                   />
                 </LineChart>
               </ResponsiveContainer>
