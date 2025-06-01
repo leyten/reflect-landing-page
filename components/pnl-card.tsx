@@ -31,8 +31,6 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: `${hour}:00`,
         pnl: Math.round(value),
-        pnlPos: value > 0 ? Math.round(value) : 0,
-        pnlNeg: value < 0 ? Math.round(value) : 0,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
@@ -50,8 +48,6 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: `${dayNames[date.getDay()]} ${hour}:00`,
         pnl: Math.round(value),
-        pnlPos: value > 0 ? Math.round(value) : 0,
-        pnlNeg: value < 0 ? Math.round(value) : 0,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
@@ -66,8 +62,6 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: `${date.getMonth() + 1}/${date.getDate()}`,
         pnl: Math.round(value),
-        pnlPos: value > 0 ? Math.round(value) : 0,
-        pnlNeg: value < 0 ? Math.round(value) : 0,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
@@ -84,8 +78,6 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: monthNames[month],
         pnl: Math.round(value),
-        pnlPos: value > 0 ? Math.round(value) : 0,
-        pnlNeg: value < 0 ? Math.round(value) : 0,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
@@ -93,10 +85,42 @@ const generateDetailedPnlData = (timeframe: string) => {
   }
 }
 
+// Custom line component that changes color based on value
+const CustomLine = (props: any) => {
+  const { points } = props
+  if (!points || points.length === 0) return null
+
+  const segments = []
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const currentPoint = points[i]
+    const nextPoint = points[i + 1]
+
+    // Determine color based on current point value
+    const isPositive = currentPoint.payload.pnl >= 0
+    const color = isPositive ? "#10b981" : "#ef4444"
+
+    segments.push(
+      <line
+        key={i}
+        x1={currentPoint.x}
+        y1={currentPoint.y}
+        x2={nextPoint.x}
+        y2={nextPoint.y}
+        stroke={color}
+        strokeWidth={3}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />,
+    )
+  }
+
+  return <g>{segments}</g>
+}
+
 export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
   const [pnlTimeframe, setPnlTimeframe] = useState("day")
   const [detailedPnlData, setDetailedPnlData] = useState<any[]>([])
-  const [activeTooltipIndex, setActiveTooltipIndex] = useState<number | null>(null)
 
   useEffect(() => {
     setDetailedPnlData(generateDetailedPnlData(pnlTimeframe))
@@ -157,35 +181,12 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
           <div className="flex flex-col items-center">
             <div className="w-full h-[150px] overflow-hidden">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={detailedPnlData}
-                  margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
-                  onMouseMove={(e) => {
-                    if (e && e.activeTooltipIndex !== undefined) {
-                      setActiveTooltipIndex(e.activeTooltipIndex)
-                    }
-                  }}
-                  onMouseLeave={() => setActiveTooltipIndex(null)}
-                >
-                  <defs>
-                    <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  {activeTooltipIndex !== null && (
-                    <ReferenceLine
-                      x={detailedPnlData[activeTooltipIndex]?.time}
-                      stroke="#d1d5db"
-                      strokeDasharray="3 3"
-                      strokeOpacity={0.7}
-                    />
-                  )}
+                <LineChart data={detailedPnlData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                   <XAxis dataKey="time" tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis hide />
-                  <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
+                  <ReferenceLine y={0} stroke="#ef4444" strokeWidth={2} />
                   <ChartTooltip
-                    cursor={false}
+                    cursor={{ stroke: "#d1d5db", strokeDasharray: "3 3" }}
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
                         const value = payload[0].value as number
@@ -203,55 +204,19 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                       return null
                     }}
                   />
-                  {/* Positive values line (green) */}
-                  <Line
-                    type="monotone"
-                    dataKey="pnlPos"
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={false}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    isAnimationActive={true}
-                    animationDuration={1000}
-                    connectNulls={true}
-                  />
-                  {/* Negative values line (red) */}
-                  <Line
-                    type="monotone"
-                    dataKey="pnlNeg"
-                    stroke="#ef4444"
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={false}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    isAnimationActive={true}
-                    animationDuration={1000}
-                    connectNulls={true}
-                  />
-                  {/* Active dot layer */}
                   <Line
                     type="monotone"
                     dataKey="pnl"
                     stroke="transparent"
+                    strokeWidth={3}
                     dot={false}
-                    activeDot={(props: any) => {
-                      const { cx, cy, value } = props
-                      const isPositive = (value as number) >= 0
-                      return (
-                        <circle
-                          cx={cx}
-                          cy={cy}
-                          r={6}
-                          stroke={isPositive ? "#10b981" : "#ef4444"}
-                          strokeWidth={2}
-                          fill="#ffffff"
-                        />
-                      )
+                    activeDot={{
+                      r: 6,
+                      stroke: "#ffffff",
+                      strokeWidth: 2,
+                      fill: "#10b981",
                     }}
-                    isAnimationActive={false}
+                    shape={<CustomLine />}
                   />
                 </LineChart>
               </ResponsiveContainer>
