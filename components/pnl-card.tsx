@@ -31,6 +31,8 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: `${hour}:00`,
         pnl: Math.round(value),
+        pnlPos: value > 0 ? Math.round(value) : 0,
+        pnlNeg: value < 0 ? Math.round(value) : 0,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
@@ -48,6 +50,8 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: `${dayNames[date.getDay()]} ${hour}:00`,
         pnl: Math.round(value),
+        pnlPos: value > 0 ? Math.round(value) : 0,
+        pnlNeg: value < 0 ? Math.round(value) : 0,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
@@ -62,6 +66,8 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: `${date.getMonth() + 1}/${date.getDate()}`,
         pnl: Math.round(value),
+        pnlPos: value > 0 ? Math.round(value) : 0,
+        pnlNeg: value < 0 ? Math.round(value) : 0,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
@@ -78,6 +84,8 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: monthNames[month],
         pnl: Math.round(value),
+        pnlPos: value > 0 ? Math.round(value) : 0,
+        pnlNeg: value < 0 ? Math.round(value) : 0,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
@@ -85,30 +93,14 @@ const generateDetailedPnlData = (timeframe: string) => {
   }
 }
 
-// Split data into positive and negative segments for color rendering
-const splitDataBySign = (data: any[]) => {
-  const positiveData = data.map((item) => ({
-    ...item,
-    pnl: item.pnl >= 0 ? item.pnl : null,
-  }))
-
-  const negativeData = data.map((item) => ({
-    ...item,
-    pnl: item.pnl < 0 ? item.pnl : null,
-  }))
-
-  return { positiveData, negativeData }
-}
-
 export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
   const [pnlTimeframe, setPnlTimeframe] = useState("day")
   const [detailedPnlData, setDetailedPnlData] = useState<any[]>([])
+  const [activeTooltipIndex, setActiveTooltipIndex] = useState<number | null>(null)
 
   useEffect(() => {
     setDetailedPnlData(generateDetailedPnlData(pnlTimeframe))
   }, [pnlTimeframe])
-
-  const { positiveData, negativeData } = splitDataBySign(detailedPnlData)
 
   return (
     <Card
@@ -165,21 +157,40 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
           <div className="flex flex-col items-center">
             <div className="w-full h-[150px] overflow-hidden">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={detailedPnlData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                <LineChart
+                  data={detailedPnlData}
+                  margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                  onMouseMove={(e) => {
+                    if (e && e.activeTooltipIndex !== undefined) {
+                      setActiveTooltipIndex(e.activeTooltipIndex)
+                    }
+                  }}
+                  onMouseLeave={() => setActiveTooltipIndex(null)}
+                >
+                  {activeTooltipIndex !== null && (
+                    <ReferenceLine
+                      x={detailedPnlData[activeTooltipIndex]?.time}
+                      stroke="#d1d5db"
+                      strokeDasharray="3 3"
+                      strokeOpacity={0.7}
+                    />
+                  )}
                   <XAxis dataKey="time" tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis hide />
-                  <ReferenceLine y={0} stroke="#ef4444" strokeWidth={2} />
+                  <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
                   <ChartTooltip
-                    cursor={{ stroke: "#d1d5db", strokeDasharray: "3 3" }}
-                    content={({ active, payload, label }) => {
+                    cursor={false}
+                    content={({ active, payload }) => {
                       if (active && payload && payload.length) {
-                        const value = payload[0].value as number
-                        const isPositive = value >= 0
+                        // Find the non-zero value (either pnlPos or pnlNeg)
+                        const pnlValue = payload[0].payload.pnl as number
+                        const isPositive = pnlValue >= 0
                         const timestamp = payload[0].payload.timestamp
+
                         return (
                           <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md">
                             <p className={`text-lg font-bold ${isPositive ? "text-green-600" : "text-red-600"}`}>
-                              {isPositive ? "+" : ""}${Math.abs(value).toLocaleString()}
+                              {isPositive ? "+" : ""}${Math.abs(pnlValue).toLocaleString()}
                             </p>
                             <p className="text-xs text-gray-500 mt-1">{timestamp}</p>
                           </div>
@@ -188,37 +199,39 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                       return null
                     }}
                   />
-                  {/* Green line for positive values */}
+
+                  {/* Single line with dynamic coloring */}
                   <Line
                     type="monotone"
                     dataKey="pnl"
-                    data={positiveData}
-                    stroke="#10b981"
-                    strokeWidth={3}
+                    stroke="#000"
+                    strokeWidth={2}
                     dot={false}
-                    activeDot={{
-                      r: 6,
-                      stroke: "#ffffff",
-                      strokeWidth: 2,
-                      fill: "#10b981",
+                    activeDot={(props: any) => {
+                      const { cx, cy, value } = props
+                      const pnlValue = props.payload.pnl as number
+                      const isPositive = pnlValue >= 0
+                      return (
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={6}
+                          stroke={isPositive ? "#10b981" : "#ef4444"}
+                          strokeWidth={2}
+                          fill="#ffffff"
+                        />
+                      )
                     }}
-                    connectNulls={false}
-                  />
-                  {/* Red line for negative values */}
-                  <Line
-                    type="monotone"
-                    dataKey="pnl"
-                    data={negativeData}
-                    stroke="#ef4444"
-                    strokeWidth={3}
-                    dot={false}
-                    activeDot={{
-                      r: 6,
-                      stroke: "#ffffff",
-                      strokeWidth: 2,
-                      fill: "#ef4444",
+                    strokeDasharray="0"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    connectNulls={true}
+                    isAnimationActive={true}
+                    animationDuration={1000}
+                    // Use a function to dynamically set segment colors
+                    stroke={(data) => {
+                      return data.pnl >= 0 ? "#10b981" : "#ef4444"
                     }}
-                    connectNulls={false}
                   />
                 </LineChart>
               </ResponsiveContainer>
