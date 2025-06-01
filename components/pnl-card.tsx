@@ -1,16 +1,8 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  ReferenceLine
-} from "recharts"
-import { ChartTooltip } from "@/components/ui/chart"
 import { useEffect, useState } from "react"
+import PnLLightweightChart from "./pnl-lightweight-chart"
 
 interface PnLCardProps {
   isVisible: boolean
@@ -24,64 +16,72 @@ const pnlData = {
   total: { value: 28750, percentage: 12.4, isPositive: true },
 }
 
+// Generate more detailed PnL chart data with UNIX timestamps
 const generateDetailedPnlData = (timeframe: string) => {
   const now = new Date()
-  let rawData: Array<{ time: string; pnl: number; timestamp: string }> = []
+  const baseTimestamp = Math.floor(now.getTime() / 1000)
 
   if (timeframe === "day") {
-    rawData = Array.from({ length: 24 }, (_, i) => {
-      const date = new Date(now)
-      date.setHours(i, 0, 0, 0)
+    // Generate hourly data for today with some negative values
+    return Array.from({ length: 24 }, (_, i) => {
+      const hour = i
+      const value = Math.sin(i / 3) * 1000 + Math.random() * 500 - 200 + i * 50
+      const timestamp = baseTimestamp - (24 - i) * 3600 // 1 hour intervals
       return {
-        time: date.toISOString(),
-        pnl: Math.sin(i / 3) * 1000 + Math.random() * 500 - 200 + i * 50,
-        timestamp: date.toLocaleString(),
+        time: timestamp,
+        value: Math.round(value),
+        displayTime: `${hour}:00`,
+        timestamp: new Date(timestamp * 1000).toLocaleString(),
+        isPositive: value > 0,
       }
     })
   } else if (timeframe === "week") {
-    rawData = Array.from({ length: 7 * 4 }, (_, i) => {
-      const date = new Date(now)
-      date.setDate(date.getDate() - (6 - Math.floor(i / 4)))
-      date.setHours((i % 4) * 6, 0, 0, 0)
+    // Generate data for each 3-hour period of the past 7 days
+    return Array.from({ length: 7 * 8 }, (_, i) => {
+      const day = Math.floor(i / 8)
+      const hour = (i % 8) * 3
+      const value = Math.sin(i / 5) * 2000 + Math.random() * 1000 - 500 + i * 30
+      const timestamp = baseTimestamp - (7 * 8 - i) * 3600 * 3 // 3 hour intervals
+      const date = new Date(timestamp * 1000)
+      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
       return {
-        time: date.toISOString(),
-        pnl: Math.sin(i / 5) * 2000 + Math.random() * 1000 - 500 + i * 30,
+        time: timestamp,
+        value: Math.round(value),
+        displayTime: `${dayNames[date.getDay()]} ${hour}:00`,
         timestamp: date.toLocaleString(),
+        isPositive: value > 0,
       }
     })
   } else if (timeframe === "month") {
-    rawData = Array.from({ length: 30 }, (_, i) => {
-      const date = new Date(now)
-      date.setDate(date.getDate() - (30 - i))
+    // Generate daily data for the past month
+    return Array.from({ length: 30 }, (_, i) => {
+      const value = Math.sin(i / 10) * 3000 + Math.cos(i / 5) * 2000 - 2000
+      const timestamp = baseTimestamp - (30 - i) * 86400 // 1 day intervals
+      const date = new Date(timestamp * 1000)
       return {
-        time: date.toISOString(),
-        pnl: Math.sin(i / 10) * 3000 + Math.cos(i / 5) * 2000 - 2000,
+        time: timestamp,
+        value: Math.round(value),
+        displayTime: `${date.getMonth() + 1}/${date.getDate()}`,
         timestamp: date.toLocaleString(),
+        isPositive: value > 0,
       }
     })
   } else {
-    rawData = Array.from({ length: 12 }, (_, i) => {
-      const date = new Date(now)
-      date.setMonth(i)
-      date.setDate(15)
+    // Generate monthly data for the year
+    return Array.from({ length: 12 }, (_, i) => {
+      const value = Math.sin(i / 2) * 5000 + Math.cos(i / 4) * 10000 + i * 1000 - (i < 3 ? 8000 : 0)
+      const timestamp = baseTimestamp - (12 - i) * 86400 * 30 // ~1 month intervals
+      const date = new Date(timestamp * 1000)
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
       return {
-        time: date.toISOString(),
-        pnl: Math.sin(i / 2) * 5000 + Math.cos(i / 4) * 10000 + i * 1000 - (i < 3 ? 8000 : 0),
+        time: timestamp,
+        value: Math.round(value),
+        displayTime: monthNames[date.getMonth()],
         timestamp: date.toLocaleString(),
+        isPositive: value > 0,
       }
     })
   }
-
-  return rawData.map((item) => ({
-    ...item,
-    pnl: Math.round(item.pnl),
-    displayTime:
-      timeframe === "day"
-        ? new Date(item.time).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-        : timeframe === "week" || timeframe === "month"
-          ? new Date(item.time).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-          : new Date(item.time).toLocaleDateString("en-US", { month: "short" }),
-  }))
 }
 
 export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
@@ -92,14 +92,10 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
     setDetailedPnlData(generateDetailedPnlData(pnlTimeframe))
   }, [pnlTimeframe])
 
-  const positiveData = detailedPnlData.map((d) => ({
-    ...d,
-    pnl: d.pnl >= 0 ? d.pnl : null,
-  }))
-
-  const negativeData = detailedPnlData.map((d) => ({
-    ...d,
-    pnl: d.pnl < 0 ? d.pnl : null,
+  // Convert data for lightweight charts
+  const chartData = detailedPnlData.map((item) => ({
+    time: item.time,
+    value: item.value,
   }))
 
   return (
@@ -153,90 +149,22 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
             </div>
           </div>
 
-          {/* Chart */}
+          {/* PnL Chart */}
           <div className="flex flex-col items-center">
-            <div className="w-full h-[150px] overflow-hidden">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={detailedPnlData}
-                  margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
-                >
-                  <defs>
-                    <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
-                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.3} />
-                    </linearGradient>
-                    <linearGradient id="redGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#ef4444" stopOpacity={0.8} />
-                      <stop offset="100%" stopColor="#ef4444" stopOpacity={0.3} />
-                    </linearGradient>
-                  </defs>
-
-                  <XAxis
-                    dataKey="displayTime"
-                    tick={{ fill: "#6b7280", fontSize: 10 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis hide />
-                  <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={2} />
-
-                  <ChartTooltip
-                    cursor={{ stroke: "#d1d5db", strokeDasharray: "3 3" }}
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const { pnl, timestamp } = payload[0].payload
-                        if (pnl === null) return null
-                        const isPositive = pnl >= 0
-                        return (
-                          <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md">
-                            <p className={`text-lg font-bold ${isPositive ? "text-green-600" : "text-red-600"}`}>
-                              {isPositive ? "+" : "-"}${Math.abs(pnl).toLocaleString()}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">{timestamp}</p>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
-
-                  <Line
-                    type="monotone"
-                    data={positiveData}
-                    dataKey="pnl"
-                    stroke="url(#greenGradient)"
-                    strokeWidth={3}
-                    dot={false}
-                    connectNulls
-                  />
-                  <Line
-                    type="monotone"
-                    data={negativeData}
-                    dataKey="pnl"
-                    stroke="url(#redGradient)"
-                    strokeWidth={3}
-                    dot={false}
-                    connectNulls
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="w-full h-[150px] overflow-hidden rounded-lg">
+              <PnLLightweightChart data={chartData} height={150} />
             </div>
 
             <div className="mt-4 text-center">
               <div className="flex items-baseline justify-center">
                 <span
-                  className={`text-3xl font-black ${
-                    pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "text-green-500" : "text-red-500"
-                  }`}
+                  className={`text-3xl font-black ${pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "text-green-500" : "text-red-500"}`}
                 >
-                  {pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "+" : "-"}$
+                  {pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "+" : ""}$
                   {Math.abs(pnlData[pnlTimeframe as keyof typeof pnlData].value).toLocaleString()}
                 </span>
                 <span
-                  className={`ml-2 text-lg font-bold ${
-                    pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "text-green-500" : "text-red-500"
-                  }`}
+                  className={`ml-2 text-lg font-bold ${pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "text-green-500" : "text-red-500"}`}
                 >
                   {pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "+" : ""}
                   {pnlData[pnlTimeframe as keyof typeof pnlData].percentage}%
@@ -279,6 +207,22 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                       : "1,198 trades"}
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Win/Loss Ratio */}
+        <div className="mt-6 bg-gray-50 rounded-2xl p-6">
+          <div className="text-sm text-gray-600 mb-3 font-medium text-center">Win/Loss Ratio</div>
+          <div className="flex items-center space-x-3">
+            <div className="flex-1">
+              <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-yellow-400 rounded-full"
+                  style={{ width: `${pnlTimeframe === "month" ? 45 : 65}%` }}
+                ></div>
+              </div>
+            </div>
+            <span className="text-lg font-bold text-yellow-600">{pnlTimeframe === "month" ? "0.8" : "1.9"}</span>
           </div>
         </div>
       </CardContent>
