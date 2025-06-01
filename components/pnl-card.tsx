@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine } from "recharts"
-import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
+import { ChartTooltip } from "@/components/ui/chart"
 import { useEffect, useState } from "react"
 
 interface PnLCardProps {
@@ -22,7 +22,6 @@ const generateDetailedPnlData = (timeframe: string) => {
   const now = new Date()
 
   if (timeframe === "day") {
-    // Generate hourly data for today with some negative values
     return Array.from({ length: 24 }, (_, i) => {
       const hour = i
       const value = Math.sin(i / 3) * 1000 + Math.random() * 500 - 200 + i * 50
@@ -32,11 +31,9 @@ const generateDetailedPnlData = (timeframe: string) => {
         time: `${hour}:00`,
         pnl: Math.round(value),
         timestamp: date.toLocaleString(),
-        isPositive: value >= 0,
       }
     })
   } else if (timeframe === "week") {
-    // Generate data for each hour of the past 7 days with some negative values
     return Array.from({ length: 7 * 8 }, (_, i) => {
       const day = Math.floor(i / 8)
       const hour = (i % 8) * 3
@@ -49,25 +46,21 @@ const generateDetailedPnlData = (timeframe: string) => {
         time: `${dayNames[date.getDay()]} ${hour}:00`,
         pnl: Math.round(value),
         timestamp: date.toLocaleString(),
-        isPositive: value >= 0,
       }
     })
   } else if (timeframe === "month") {
-    // Generate daily data for the past month with more negative values
     return Array.from({ length: 30 }, (_, i) => {
       const day = i + 1
-      const value = Math.sin(i / 10) * 1000 + Math.cos(i / 5) * 1000 - 3000 // Made more negative
+      const value = Math.sin(i / 10) * 3000 + Math.cos(i / 5) * 2000 - 2000
       const date = new Date(now)
       date.setDate(date.getDate() - (30 - day))
       return {
         time: `${date.getMonth() + 1}/${date.getDate()}`,
         pnl: Math.round(value),
         timestamp: date.toLocaleString(),
-        isPositive: value >= 0,
       }
     })
   } else {
-    // Generate monthly data for the year with some negative values
     return Array.from({ length: 12 }, (_, i) => {
       const month = i
       const value = Math.sin(i / 2) * 5000 + Math.cos(i / 4) * 10000 + i * 1000 - (i < 3 ? 8000 : 0)
@@ -79,10 +72,18 @@ const generateDetailedPnlData = (timeframe: string) => {
         time: monthNames[month],
         pnl: Math.round(value),
         timestamp: date.toLocaleString(),
-        isPositive: value >= 0,
       }
     })
   }
+}
+
+// Create separate data arrays for positive and negative values
+const createColoredData = (data: any[]) => {
+  return data.map((point) => ({
+    ...point,
+    pnlPositive: point.pnl >= 0 ? point.pnl : null,
+    pnlNegative: point.pnl < 0 ? point.pnl : null,
+  }))
 }
 
 export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
@@ -90,12 +91,9 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
   const [detailedPnlData, setDetailedPnlData] = useState<any[]>([])
 
   useEffect(() => {
-    setDetailedPnlData(generateDetailedPnlData(pnlTimeframe))
+    const rawData = generateDetailedPnlData(pnlTimeframe)
+    setDetailedPnlData(createColoredData(rawData))
   }, [pnlTimeframe])
-
-  // Determine overall trend for line color
-  const isOverallPositive = pnlData[pnlTimeframe as keyof typeof pnlData].isPositive
-  const lineColor = isOverallPositive ? "#10b981" : "#ef4444"
 
   return (
     <Card
@@ -150,69 +148,71 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
 
           {/* PnL Graph */}
           <div className="flex flex-col items-center">
-            <div className="w-full h-[150px]">
-              <ChartContainer
-                config={{
-                  pnl: {
-                    label: "PnL",
-                    color: lineColor,
-                  },
-                }}
-                className="h-full w-full"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={detailedPnlData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                    <XAxis dataKey="time" tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <YAxis hide />
-                    <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
-                    <ChartTooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const pnlValue = payload[0].value as number
-                          const isPositive = pnlValue >= 0
-                          const timestamp = payload[0].payload.timestamp
+            <div className="w-full h-[150px] overflow-hidden">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={detailedPnlData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                  <XAxis dataKey="time" tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis hide />
+                  <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
+                  <ChartTooltip
+                    cursor={false}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const pnlValue = payload[0].payload.pnl
+                        const isPositive = pnlValue >= 0
+                        const timestamp = payload[0].payload.timestamp
 
-                          return (
-                            <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md">
-                              <p className={`text-lg font-bold ${isPositive ? "text-green-600" : "text-red-600"}`}>
-                                {isPositive ? "+" : "-"}${Math.abs(pnlValue).toLocaleString()}
-                              </p>
-                              <p className="text-xs text-gray-500 mt-1">{timestamp}</p>
-                            </div>
-                          )
-                        }
-                        return null
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="pnl"
-                      stroke={lineColor}
-                      strokeWidth={3}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      dot={false}
-                      activeDot={{
-                        r: 6,
-                        stroke: lineColor,
-                        strokeWidth: 2,
-                        fill: "#ffffff",
-                      }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+                        return (
+                          <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md">
+                            <p className={`text-lg font-bold ${isPositive ? "text-green-600" : "text-red-600"}`}>
+                              {isPositive ? "+" : "-"}${Math.abs(pnlValue).toLocaleString()}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">{timestamp}</p>
+                          </div>
+                        )
+                      }
+                      return null
+                    }}
+                  />
+
+                  {/* Green line for positive values */}
+                  <Line
+                    type="monotone"
+                    dataKey="pnlPositive"
+                    stroke="#10b981"
+                    strokeWidth={3}
+                    dot={false}
+                    activeDot={{ r: 6, stroke: "#10b981", strokeWidth: 2, fill: "#ffffff" }}
+                    connectNulls={false}
+                  />
+
+                  {/* Red line for negative values */}
+                  <Line
+                    type="monotone"
+                    dataKey="pnlNegative"
+                    stroke="#ef4444"
+                    strokeWidth={3}
+                    dot={false}
+                    activeDot={{ r: 6, stroke: "#ef4444", strokeWidth: 2, fill: "#ffffff" }}
+                    connectNulls={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
 
             <div className="mt-4 text-center">
               <div className="flex items-baseline justify-center">
-                <span className={`text-3xl font-black ${isOverallPositive ? "text-green-500" : "text-red-500"}`}>
-                  {isOverallPositive ? "+" : "-"}$
+                <span
+                  className={`text-3xl font-black ${pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "text-green-500" : "text-red-500"}`}
+                >
+                  {pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "+" : "-"}$
                   {Math.abs(pnlData[pnlTimeframe as keyof typeof pnlData].value).toLocaleString()}
                 </span>
-                <span className={`ml-2 text-lg font-bold ${isOverallPositive ? "text-green-500" : "text-red-500"}`}>
-                  {isOverallPositive ? "+" : "-"}
-                  {Math.abs(pnlData[pnlTimeframe as keyof typeof pnlData].percentage)}%
+                <span
+                  className={`ml-2 text-lg font-bold ${pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "text-green-500" : "text-red-500"}`}
+                >
+                  {pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "+" : "-"}
+                  {Math.abs(pnlData[pnlTimeframe as keyof typeof pnlData].percentage).toFixed(1)}%
                 </span>
               </div>
               <p className="text-gray-600 text-sm mt-1">
