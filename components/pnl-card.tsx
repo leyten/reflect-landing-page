@@ -102,7 +102,7 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
               {currentPnL.percentage}%
             </span>
           </div>
-          <div className="text-gray-600 text-sm">Net Profit & Loss (Sell - Buy)</div>
+          <div className="text-gray-600 text-sm">Net Profit & Loss</div>
         </div>
 
         {/* Buy/Sell Grid */}
