@@ -1,8 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { useEffect, useState } from "react"
-import PnLLightweightChart from "./pnl-lightweight-chart"
+import { useState } from "react"
 
 interface PnLCardProps {
   isVisible: boolean
@@ -10,93 +9,32 @@ interface PnLCardProps {
 }
 
 const pnlData = {
-  day: { value: 1240, percentage: 3.2, isPositive: true },
-  week: { value: 4850, percentage: 7.8, isPositive: true },
-  month: { value: -2340, percentage: -1.5, isPositive: false },
-  total: { value: 28750, percentage: 12.4, isPositive: true },
+  day: { value: 1240, percentage: 3.2, isPositive: true, winRate: 68 },
+  week: { value: 4850, percentage: 7.8, isPositive: true, winRate: 72 },
+  month: { value: -2340, percentage: -1.5, isPositive: false, winRate: 45 },
+  total: { value: 28750, percentage: 12.4, isPositive: true, winRate: 65 },
 }
 
-// Generate more detailed PnL chart data with UNIX timestamps
-const generateDetailedPnlData = (timeframe: string) => {
-  const now = new Date()
-  const baseTimestamp = Math.floor(now.getTime() / 1000)
+const buyData = {
+  day: { amount: 12450, trades: 8 },
+  week: { amount: 48200, trades: 23 },
+  month: { amount: 156800, trades: 89 },
+  total: { amount: 1240000, trades: 1247 },
+}
 
-  if (timeframe === "day") {
-    // Generate hourly data for today with some negative values
-    return Array.from({ length: 24 }, (_, i) => {
-      const hour = i
-      const value = Math.sin(i / 3) * 1000 + Math.random() * 500 - 200 + i * 50
-      const timestamp = baseTimestamp - (24 - i) * 3600 // 1 hour intervals
-      return {
-        time: timestamp,
-        value: Math.round(value),
-        displayTime: `${hour}:00`,
-        timestamp: new Date(timestamp * 1000).toLocaleString(),
-        isPositive: value > 0,
-      }
-    })
-  } else if (timeframe === "week") {
-    // Generate data for each 3-hour period of the past 7 days
-    return Array.from({ length: 7 * 8 }, (_, i) => {
-      const day = Math.floor(i / 8)
-      const hour = (i % 8) * 3
-      const value = Math.sin(i / 5) * 2000 + Math.random() * 1000 - 500 + i * 30
-      const timestamp = baseTimestamp - (7 * 8 - i) * 3600 * 3 // 3 hour intervals
-      const date = new Date(timestamp * 1000)
-      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-      return {
-        time: timestamp,
-        value: Math.round(value),
-        displayTime: `${dayNames[date.getDay()]} ${hour}:00`,
-        timestamp: date.toLocaleString(),
-        isPositive: value > 0,
-      }
-    })
-  } else if (timeframe === "month") {
-    // Generate daily data for the past month
-    return Array.from({ length: 30 }, (_, i) => {
-      const value = Math.sin(i / 10) * 3000 + Math.cos(i / 5) * 2000 - 2000
-      const timestamp = baseTimestamp - (30 - i) * 86400 // 1 day intervals
-      const date = new Date(timestamp * 1000)
-      return {
-        time: timestamp,
-        value: Math.round(value),
-        displayTime: `${date.getMonth() + 1}/${date.getDate()}`,
-        timestamp: date.toLocaleString(),
-        isPositive: value > 0,
-      }
-    })
-  } else {
-    // Generate monthly data for the year
-    return Array.from({ length: 12 }, (_, i) => {
-      const value = Math.sin(i / 2) * 5000 + Math.cos(i / 4) * 10000 + i * 1000 - (i < 3 ? 8000 : 0)
-      const timestamp = baseTimestamp - (12 - i) * 86400 * 30 // ~1 month intervals
-      const date = new Date(timestamp * 1000)
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-      return {
-        time: timestamp,
-        value: Math.round(value),
-        displayTime: monthNames[date.getMonth()],
-        timestamp: date.toLocaleString(),
-        isPositive: value > 0,
-      }
-    })
-  }
+const sellData = {
+  day: { amount: 11210, trades: 6 },
+  week: { amount: 43350, trades: 19 },
+  month: { amount: 159140, trades: 92 },
+  total: { amount: 1211250, trades: 1198 },
 }
 
 export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
   const [pnlTimeframe, setPnlTimeframe] = useState("day")
-  const [detailedPnlData, setDetailedPnlData] = useState<any[]>([])
 
-  useEffect(() => {
-    setDetailedPnlData(generateDetailedPnlData(pnlTimeframe))
-  }, [pnlTimeframe])
-
-  // Convert data for lightweight charts
-  const chartData = detailedPnlData.map((item) => ({
-    time: item.time,
-    value: item.value,
-  }))
+  const currentPnL = pnlData[pnlTimeframe as keyof typeof pnlData]
+  const currentBuy = buyData[pnlTimeframe as keyof typeof buyData]
+  const currentSell = sellData[pnlTimeframe as keyof typeof sellData]
 
   return (
     <Card
@@ -105,124 +43,108 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
       }`}
     >
       <CardContent className="p-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Profit & Loss</h2>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-bold text-gray-900">Trading Overview</h2>
           <div className="flex items-center space-x-2 bg-gray-50 rounded-lg p-1">
             {["day", "week", "month", "total"].map((option) => (
               <button
                 key={option}
                 onClick={() => setPnlTimeframe(option)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200 ${
-                  pnlTimeframe === option ? "bg-yellow-400 text-black" : "text-gray-600"
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                  pnlTimeframe === option ? "bg-yellow-400 text-black" : "text-gray-600 hover:text-gray-900"
                 }`}
               >
-                {option.charAt(0).toUpperCase() + option.slice(1)}
+                {option === "total" ? "All Time" : option.charAt(0).toUpperCase() + option.slice(1)}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
-          {/* Total Buy */}
-          <div className="text-center">
-            <div className="bg-green-50 rounded-2xl p-6">
-              <div className="text-sm text-green-600 mb-2 font-medium">Total Buy</div>
-              <div className="text-3xl font-black text-green-600">
-                $
-                {pnlTimeframe === "day"
-                  ? "12,450"
-                  : pnlTimeframe === "week"
-                    ? "48,200"
-                    : pnlTimeframe === "month"
-                      ? "156,800"
-                      : "1,240,000"}
-              </div>
-              <div className="text-xs text-green-500 mt-1">
-                {pnlTimeframe === "day"
-                  ? "8 trades"
-                  : pnlTimeframe === "week"
-                    ? "23 trades"
-                    : pnlTimeframe === "month"
-                      ? "89 trades"
-                      : "1,247 trades"}
-              </div>
-            </div>
+        {/* Main PnL Display */}
+        <div className="text-center mb-8">
+          <div className="text-sm text-gray-500 mb-2 uppercase tracking-wide font-medium">
+            {pnlTimeframe === "day"
+              ? "Today's Performance"
+              : pnlTimeframe === "week"
+                ? "This Week's Performance"
+                : pnlTimeframe === "month"
+                  ? "This Month's Performance"
+                  : "All Time Performance"}
           </div>
+          <div className="flex items-baseline justify-center mb-2">
+            <span className={`text-5xl font-black ${currentPnL.isPositive ? "text-green-500" : "text-red-500"}`}>
+              {currentPnL.isPositive ? "+" : ""}${Math.abs(currentPnL.value).toLocaleString()}
+            </span>
+            <span className={`ml-3 text-2xl font-bold ${currentPnL.isPositive ? "text-green-500" : "text-red-500"}`}>
+              {currentPnL.isPositive ? "+" : ""}
+              {currentPnL.percentage}%
+            </span>
+          </div>
+          <div className="text-gray-600 text-sm">Net Profit & Loss</div>
+        </div>
 
-          {/* PnL Chart */}
-          <div className="flex flex-col items-center">
-            <div className="w-full h-[150px] overflow-hidden rounded-lg">
-              <PnLLightweightChart data={chartData} height={150} />
-            </div>
-
-            <div className="mt-4 text-center">
-              <div className="flex items-baseline justify-center">
-                <span
-                  className={`text-3xl font-black ${pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "text-green-500" : "text-red-500"}`}
-                >
-                  {pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "+" : ""}$
-                  {Math.abs(pnlData[pnlTimeframe as keyof typeof pnlData].value).toLocaleString()}
-                </span>
-                <span
-                  className={`ml-2 text-lg font-bold ${pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "text-green-500" : "text-red-500"}`}
-                >
-                  {pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "+" : ""}
-                  {pnlData[pnlTimeframe as keyof typeof pnlData].percentage}%
-                </span>
+        {/* Buy/Sell Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Total Buy */}
+          <div className="bg-green-50 rounded-2xl p-6 border border-green-100">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-green-700 font-semibold text-sm uppercase tracking-wide">Total Buy</div>
+              <div className="bg-green-200 text-green-800 px-2 py-1 rounded-full text-xs font-bold">
+                {currentBuy.trades} trades
               </div>
-              <p className="text-gray-600 text-sm mt-1">
-                {pnlTimeframe === "day"
-                  ? "Today"
-                  : pnlTimeframe === "week"
-                    ? "This week"
-                    : pnlTimeframe === "month"
-                      ? "This month"
-                      : "All time"}{" "}
-                performance
-              </p>
+            </div>
+            <div className="text-3xl font-black text-green-600 mb-1">${currentBuy.amount.toLocaleString()}</div>
+            <div className="text-green-600 text-sm">
+              Avg: ${Math.round(currentBuy.amount / currentBuy.trades).toLocaleString()} per trade
             </div>
           </div>
 
           {/* Total Sell */}
-          <div className="text-center">
-            <div className="bg-red-50 rounded-2xl p-6">
-              <div className="text-sm text-red-600 mb-2 font-medium">Total Sell</div>
-              <div className="text-3xl font-black text-red-600">
-                $
-                {pnlTimeframe === "day"
-                  ? "11,210"
-                  : pnlTimeframe === "week"
-                    ? "43,350"
-                    : pnlTimeframe === "month"
-                      ? "159,140"
-                      : "1,211,250"}
+          <div className="bg-red-50 rounded-2xl p-6 border border-red-100">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-red-700 font-semibold text-sm uppercase tracking-wide">Total Sell</div>
+              <div className="bg-red-200 text-red-800 px-2 py-1 rounded-full text-xs font-bold">
+                {currentSell.trades} trades
               </div>
-              <div className="text-xs text-red-500 mt-1">
-                {pnlTimeframe === "day"
-                  ? "6 trades"
-                  : pnlTimeframe === "week"
-                    ? "19 trades"
-                    : pnlTimeframe === "month"
-                      ? "92 trades"
-                      : "1,198 trades"}
-              </div>
+            </div>
+            <div className="text-3xl font-black text-red-600 mb-1">${currentSell.amount.toLocaleString()}</div>
+            <div className="text-red-600 text-sm">
+              Avg: ${Math.round(currentSell.amount / currentSell.trades).toLocaleString()} per trade
             </div>
           </div>
         </div>
 
-        {/* Win/Loss Ratio */}
-        <div className="mt-6 bg-gray-50 rounded-2xl p-6">
-          <div className="text-sm text-gray-600 mb-3 font-medium text-center">Win/Loss Ratio</div>
-          <div className="flex items-center space-x-3">
-            <div className="flex-1">
-              <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-yellow-400 rounded-full"
-                  style={{ width: `${pnlTimeframe === "month" ? 45 : 65}%` }}
-                ></div>
+        {/* Win Rate Section */}
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-6 border border-yellow-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-yellow-800 font-semibold text-sm uppercase tracking-wide mb-2">Win Rate</div>
+              <div className="text-4xl font-black text-yellow-600 mb-1">{currentPnL.winRate}%</div>
+              <div className="text-yellow-700 text-sm">
+                {Math.round((currentBuy.trades + currentSell.trades) * (currentPnL.winRate / 100))} winning trades
               </div>
             </div>
-            <span className="text-lg font-bold text-yellow-600">{pnlTimeframe === "month" ? "0.8" : "1.9"}</span>
+            <div className="text-right">
+              <div className="text-yellow-800 font-semibold text-sm uppercase tracking-wide mb-2">Total Trades</div>
+              <div className="text-3xl font-black text-yellow-600 mb-1">{currentBuy.trades + currentSell.trades}</div>
+              <div className="text-yellow-700 text-sm">
+                {Math.round((currentBuy.trades + currentSell.trades) * (1 - currentPnL.winRate / 100))} losing trades
+              </div>
+            </div>
+          </div>
+
+          {/* Win Rate Progress Bar */}
+          <div className="mt-4">
+            <div className="flex justify-between text-xs text-yellow-700 mb-2">
+              <span>Losses</span>
+              <span>Wins</span>
+            </div>
+            <div className="h-3 bg-yellow-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full transition-all duration-500"
+                style={{ width: `${currentPnL.winRate}%` }}
+              ></div>
+            </div>
           </div>
         </div>
       </CardContent>
