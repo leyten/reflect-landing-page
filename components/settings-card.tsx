@@ -20,9 +20,16 @@ export default function SettingsCard({ isVisible }: SettingsCardProps) {
   const [sensitivityValue, setSensitivityValue] = useState([50])
 
   const getSensitivityLabel = (value: number) => {
-    if (value <= 33) return "Low"
-    if (value <= 66) return "Balanced"
+    if (value <= 25) return "Low"
+    if (value <= 75) return "Balanced"
     return "High"
+  }
+
+  const snapToStage = (value: number[]) => {
+    const val = value[0]
+    if (val <= 25) return [0]
+    if (val <= 75) return [50]
+    return [100]
   }
 
   return (
@@ -45,10 +52,30 @@ export default function SettingsCard({ isVisible }: SettingsCardProps) {
                 </div>
               </div>
               {setting.type === "slider" ? (
-                <div className="w-24">
+                <div className="w-32">
+                  <div className="relative mb-2">
+                    {/* Stage indicators */}
+                    <div className="flex justify-between text-xs text-gray-400 mb-1">
+                      <span className={sensitivityValue[0] === 0 ? "text-yellow-600 font-bold" : ""}>Low</span>
+                      <span className={sensitivityValue[0] === 50 ? "text-yellow-600 font-bold" : ""}>Bal</span>
+                      <span className={sensitivityValue[0] === 100 ? "text-yellow-600 font-bold" : ""}>High</span>
+                    </div>
+                    {/* Stage dots */}
+                    <div className="flex justify-between absolute -top-1 left-0 right-0">
+                      <div
+                        className={`w-2 h-2 rounded-full ${sensitivityValue[0] === 0 ? "bg-yellow-400" : "bg-gray-300"}`}
+                      ></div>
+                      <div
+                        className={`w-2 h-2 rounded-full ${sensitivityValue[0] === 50 ? "bg-yellow-400" : "bg-gray-300"}`}
+                      ></div>
+                      <div
+                        className={`w-2 h-2 rounded-full ${sensitivityValue[0] === 100 ? "bg-yellow-400" : "bg-gray-300"}`}
+                      ></div>
+                    </div>
+                  </div>
                   <Slider
                     value={sensitivityValue}
-                    onValueChange={setSensitivityValue}
+                    onValueChange={(value) => setSensitivityValue(snapToStage(value))}
                     max={100}
                     step={1}
                     className="[&_[role=slider]]:bg-yellow-400 [&_[role=slider]]:border-yellow-400"
