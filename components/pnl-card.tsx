@@ -188,7 +188,7 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                     cursor={false}
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
-                        const value = payload[0].value
+                        const value = payload[0].value as number
                         const isPositive = value >= 0
                         const timestamp = payload[0].payload.timestamp
                         return (
@@ -237,8 +237,9 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                     dataKey="pnl"
                     stroke="transparent"
                     dot={false}
-                    activeDot={({ cx, cy, stroke, dataKey, value, ...rest }) => {
-                      const isPositive = value >= 0
+                    activeDot={(props: any) => {
+                      const { cx, cy, value } = props
+                      const isPositive = (value as number) >= 0
                       return (
                         <circle
                           cx={cx}
@@ -247,7 +248,6 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                           stroke={isPositive ? "#10b981" : "#ef4444"}
                           strokeWidth={2}
                           fill="#ffffff"
-                          {...rest}
                         />
                       )
                     }}

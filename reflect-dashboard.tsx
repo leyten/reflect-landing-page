@@ -53,7 +53,7 @@ const pnlData = {
 }
 
 // Generate more detailed PnL chart data
-const generateDetailedPnlData = (timeframe) => {
+const generateDetailedPnlData = (timeframe: "day" | "week" | "month" | "year") => {
   const now = new Date()
 
   if (timeframe === "day") {
