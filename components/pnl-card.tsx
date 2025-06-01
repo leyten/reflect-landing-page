@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine } from "recharts"
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from "recharts"
 import { ChartTooltip } from "@/components/ui/chart"
 import { useEffect, useState } from "react"
 
@@ -187,7 +187,7 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                     }}
                   />
                   <YAxis hide />
-                  <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
+
                   <ChartTooltip
                     cursor={false}
                     content={({ active, payload }) => {
