@@ -31,6 +31,8 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: `${hour}:00`,
         pnl: Math.round(value),
+        pnlPositive: value > 0 ? Math.round(value) : null,
+        pnlNegative: value <= 0 ? Math.round(value) : null,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
@@ -48,6 +50,8 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: `${dayNames[date.getDay()]} ${hour}:00`,
         pnl: Math.round(value),
+        pnlPositive: value > 0 ? Math.round(value) : null,
+        pnlNegative: value <= 0 ? Math.round(value) : null,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
@@ -62,6 +66,8 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: `${date.getMonth() + 1}/${date.getDate()}`,
         pnl: Math.round(value),
+        pnlPositive: value > 0 ? Math.round(value) : null,
+        pnlNegative: value <= 0 ? Math.round(value) : null,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
@@ -78,38 +84,13 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: monthNames[month],
         pnl: Math.round(value),
+        pnlPositive: value > 0 ? Math.round(value) : null,
+        pnlNegative: value <= 0 ? Math.round(value) : null,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
     })
   }
-}
-
-// Create segments for dynamic coloring
-const createColoredSegments = (data: any[]) => {
-  const segments: any[] = []
-  let currentSegment: any[] = []
-  let currentColor = ""
-
-  data.forEach((point, index) => {
-    const color = point.pnl >= 0 ? "#10b981" : "#ef4444"
-
-    if (currentColor !== color) {
-      if (currentSegment.length > 0) {
-        segments.push({ data: currentSegment, color: currentColor })
-      }
-      currentSegment = [point]
-      currentColor = color
-    } else {
-      currentSegment.push(point)
-    }
-  })
-
-  if (currentSegment.length > 0) {
-    segments.push({ data: currentSegment, color: currentColor })
-  }
-
-  return segments
 }
 
 export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
@@ -120,8 +101,6 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
   useEffect(() => {
     setDetailedPnlData(generateDetailedPnlData(pnlTimeframe))
   }, [pnlTimeframe])
-
-  const coloredSegments = createColoredSegments(detailedPnlData)
 
   return (
     <Card
@@ -220,47 +199,58 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                     }}
                   />
 
-                  {/* Render multiple line segments with different colors */}
-                  {coloredSegments.map((segment, index) => (
-                    <Line
-                      key={index}
-                      type="monotone"
-                      dataKey="pnl"
-                      data={segment.data}
-                      stroke={segment.color}
-                      strokeWidth={3}
-                      dot={false}
-                      activeDot={(props: any) => {
-                        const { cx, cy } = props
-                        const pnlValue = props.payload.pnl as number
-                        const isPositive = pnlValue >= 0
-                        return (
-                          <circle
-                            cx={cx}
-                            cy={cy}
-                            r={6}
-                            stroke={isPositive ? "#10b981" : "#ef4444"}
-                            strokeWidth={2}
-                            fill="#ffffff"
-                          />
-                        )
-                      }}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      connectNulls={false}
-                      isAnimationActive={true}
-                      animationDuration={1000}
-                    />
-                  ))}
+                  {/* Positive values line (green) */}
+                  <Line
+                    type="monotone"
+                    dataKey="pnlPositive"
+                    stroke="#10b981"
+                    strokeWidth={3}
+                    dot={false}
+                    activeDot={false}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    connectNulls={false}
+                    isAnimationActive={true}
+                    animationDuration={1000}
+                  />
 
-                  {/* Invisible line for tooltip interaction */}
+                  {/* Negative values line (red) */}
+                  <Line
+                    type="monotone"
+                    dataKey="pnlNegative"
+                    stroke="#ef4444"
+                    strokeWidth={3}
+                    dot={false}
+                    activeDot={false}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    connectNulls={false}
+                    isAnimationActive={true}
+                    animationDuration={1000}
+                  />
+
+                  {/* Invisible line for tooltip and active dot interaction */}
                   <Line
                     type="monotone"
                     dataKey="pnl"
                     stroke="transparent"
                     strokeWidth={0}
                     dot={false}
-                    activeDot={false}
+                    activeDot={(props: any) => {
+                      const { cx, cy } = props
+                      const pnlValue = props.payload.pnl as number
+                      const isPositive = pnlValue >= 0
+                      return (
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={6}
+                          stroke={isPositive ? "#10b981" : "#ef4444"}
+                          strokeWidth={2}
+                          fill="#ffffff"
+                        />
+                      )
+                    }}
                     connectNulls={true}
                   />
                 </LineChart>
