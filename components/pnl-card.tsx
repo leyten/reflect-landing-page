@@ -85,37 +85,19 @@ const generateDetailedPnlData = (timeframe: string) => {
   }
 }
 
-// Custom line component that changes color based on value
-const CustomLine = (props: any) => {
-  const { points } = props
-  if (!points || points.length === 0) return null
+// Split data into positive and negative segments for color rendering
+const splitDataBySign = (data: any[]) => {
+  const positiveData = data.map((item) => ({
+    ...item,
+    pnl: item.pnl >= 0 ? item.pnl : null,
+  }))
 
-  const segments = []
+  const negativeData = data.map((item) => ({
+    ...item,
+    pnl: item.pnl < 0 ? item.pnl : null,
+  }))
 
-  for (let i = 0; i < points.length - 1; i++) {
-    const currentPoint = points[i]
-    const nextPoint = points[i + 1]
-
-    // Determine color based on current point value
-    const isPositive = currentPoint.payload.pnl >= 0
-    const color = isPositive ? "#10b981" : "#ef4444"
-
-    segments.push(
-      <line
-        key={i}
-        x1={currentPoint.x}
-        y1={currentPoint.y}
-        x2={nextPoint.x}
-        y2={nextPoint.y}
-        stroke={color}
-        strokeWidth={3}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />,
-    )
-  }
-
-  return <g>{segments}</g>
+  return { positiveData, negativeData }
 }
 
 export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
@@ -125,6 +107,8 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
   useEffect(() => {
     setDetailedPnlData(generateDetailedPnlData(pnlTimeframe))
   }, [pnlTimeframe])
+
+  const { positiveData, negativeData } = splitDataBySign(detailedPnlData)
 
   return (
     <Card
@@ -204,10 +188,12 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                       return null
                     }}
                   />
+                  {/* Green line for positive values */}
                   <Line
                     type="monotone"
                     dataKey="pnl"
-                    stroke="transparent"
+                    data={positiveData}
+                    stroke="#10b981"
                     strokeWidth={3}
                     dot={false}
                     activeDot={{
@@ -216,7 +202,23 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                       strokeWidth: 2,
                       fill: "#10b981",
                     }}
-                    shape={<CustomLine />}
+                    connectNulls={false}
+                  />
+                  {/* Red line for negative values */}
+                  <Line
+                    type="monotone"
+                    dataKey="pnl"
+                    data={negativeData}
+                    stroke="#ef4444"
+                    strokeWidth={3}
+                    dot={false}
+                    activeDot={{
+                      r: 6,
+                      stroke: "#ffffff",
+                      strokeWidth: 2,
+                      fill: "#ef4444",
+                    }}
+                    connectNulls={false}
                   />
                 </LineChart>
               </ResponsiveContainer>
