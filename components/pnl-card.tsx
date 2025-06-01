@@ -56,7 +56,7 @@ const generateDetailedPnlData = (timeframe: string) => {
     // Generate daily data for the past month with more negative values
     return Array.from({ length: 30 }, (_, i) => {
       const day = i + 1
-      const value = Math.sin(i / 10) * 3000 + Math.cos(i / 5) * 2000 - 2000
+      const value = Math.sin(i / 10) * 1000 + Math.cos(i / 5) * 1000 - 3000 // Made more negative
       const date = new Date(now)
       date.setDate(date.getDate() - (30 - day))
       return {
