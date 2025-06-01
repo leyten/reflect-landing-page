@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from "recharts"
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine, CartesianGrid } from "recharts"
 import { ChartTooltip } from "@/components/ui/chart"
 import { useEffect, useState } from "react"
 
@@ -17,97 +17,80 @@ const pnlData = {
   total: { value: 28750, percentage: 12.4, isPositive: true },
 }
 
-// Generate more detailed PnL chart data
+// Generate more detailed PnL chart data with proper structure
 const generateDetailedPnlData = (timeframe: string) => {
   const now = new Date()
+  let rawData: Array<{ time: string; pnl: number; timestamp: string }> = []
 
   if (timeframe === "day") {
-    return Array.from({ length: 24 }, (_, i) => {
+    // Generate hourly data for today
+    rawData = Array.from({ length: 24 }, (_, i) => {
       const hour = i
       const value = Math.sin(i / 3) * 1000 + Math.random() * 500 - 200 + i * 50
       const date = new Date(now)
       date.setHours(hour, 0, 0, 0)
       return {
-        time: `${hour}:00`,
+        time: date.toISOString(),
         pnl: Math.round(value),
         timestamp: date.toLocaleString(),
       }
     })
   } else if (timeframe === "week") {
-    return Array.from({ length: 7 * 8 }, (_, i) => {
-      const day = Math.floor(i / 8)
-      const hour = (i % 8) * 3
+    // Generate data for each day of the past 7 days
+    rawData = Array.from({ length: 7 * 4 }, (_, i) => {
+      const day = Math.floor(i / 4)
+      const hour = (i % 4) * 6
       const value = Math.sin(i / 5) * 2000 + Math.random() * 1000 - 500 + i * 30
       const date = new Date(now)
       date.setDate(date.getDate() - (6 - day))
       date.setHours(hour, 0, 0, 0)
-      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
       return {
-        time: `${dayNames[date.getDay()]} ${hour}:00`,
+        time: date.toISOString(),
         pnl: Math.round(value),
         timestamp: date.toLocaleString(),
       }
     })
   } else if (timeframe === "month") {
-    return Array.from({ length: 30 }, (_, i) => {
-      const day = i + 1
+    // Generate daily data for the past month
+    rawData = Array.from({ length: 30 }, (_, i) => {
       const value = Math.sin(i / 10) * 3000 + Math.cos(i / 5) * 2000 - 2000
       const date = new Date(now)
-      date.setDate(date.getDate() - (30 - day))
+      date.setDate(date.getDate() - (30 - i))
       return {
-        time: `${date.getMonth() + 1}/${date.getDate()}`,
+        time: date.toISOString(),
         pnl: Math.round(value),
         timestamp: date.toLocaleString(),
       }
     })
   } else {
-    return Array.from({ length: 12 }, (_, i) => {
-      const month = i
+    // Generate monthly data for the year
+    rawData = Array.from({ length: 12 }, (_, i) => {
       const value = Math.sin(i / 2) * 5000 + Math.cos(i / 4) * 10000 + i * 1000 - (i < 3 ? 8000 : 0)
       const date = new Date(now)
-      date.setMonth(month)
+      date.setMonth(i)
       date.setDate(15)
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
       return {
-        time: monthNames[month],
+        time: date.toISOString(),
         pnl: Math.round(value),
         timestamp: date.toLocaleString(),
       }
     })
   }
-}
 
-// Process data to create connection points at zero crossings
-const processDataForConnectedLines = (data: any[]) => {
-  const result = []
-
-  for (let i = 0; i < data.length; i++) {
-    const current = data[i]
-    result.push({
-      ...current,
-      pnlPositive: current.pnl >= 0 ? current.pnl : null,
-      pnlNegative: current.pnl < 0 ? current.pnl : null,
-    })
-
-    // If this is not the last point and there's a sign change, add a zero crossing point
-    if (i < data.length - 1) {
-      const next = data[i + 1]
-      if ((current.pnl >= 0 && next.pnl < 0) || (current.pnl < 0 && next.pnl >= 0)) {
-        // Add zero crossing point that both lines can connect to
-        const zeroPoint = {
-          time: current.time + "→" + next.time,
-          pnl: 0,
-          timestamp: "Zero crossing",
-          pnlPositive: 0, // Both lines connect to zero
-          pnlNegative: 0, // Both lines connect to zero
-          isZeroCrossing: true,
-        }
-        result.push(zeroPoint)
-      }
-    }
-  }
-
-  return result
+  // Split data into positive and negative for different colored lines
+  return rawData.map((item) => ({
+    ...item,
+    pnlPositive: item.pnl >= 0 ? item.pnl : null,
+    pnlNegative: item.pnl < 0 ? item.pnl : null,
+    displayTime:
+      timeframe === "day"
+        ? new Date(item.time).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+        : timeframe === "week"
+          ? new Date(item.time).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+          : timeframe === "month"
+            ? new Date(item.time).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+            : new Date(item.time).toLocaleDateString("en-US", { month: "short" }),
+  }))
 }
 
 export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
@@ -115,8 +98,7 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
   const [detailedPnlData, setDetailedPnlData] = useState<any[]>([])
 
   useEffect(() => {
-    const rawData = generateDetailedPnlData(pnlTimeframe)
-    setDetailedPnlData(processDataForConnectedLines(rawData))
+    setDetailedPnlData(generateDetailedPnlData(pnlTimeframe))
   }, [pnlTimeframe])
 
   return (
@@ -162,7 +144,7 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                 {pnlTimeframe === "day"
                   ? "8 trades"
                   : pnlTimeframe === "week"
-                    ? "19 trades"
+                    ? "23 trades"
                     : pnlTimeframe === "month"
                       ? "89 trades"
                       : "1,247 trades"}
@@ -175,69 +157,61 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
             <div className="w-full h-[150px] overflow-hidden">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={detailedPnlData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis
-                    dataKey="time"
+                    dataKey="displayTime"
                     tick={{ fill: "#6b7280", fontSize: 10 }}
                     axisLine={false}
                     tickLine={false}
-                    // Don't show ticks for zero crossing points
-                    tickFormatter={(value, index) => {
-                      return detailedPnlData[index]?.isZeroCrossing ? "" : value
-                    }}
                   />
                   <YAxis hide />
+                  <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={2} />
                   <ChartTooltip
-                    cursor={false}
-                    content={({ active, payload }) => {
+                    cursor={{ stroke: "#d1d5db", strokeDasharray: "3 3" }}
+                    content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
-                        // Don't show tooltip for zero crossing points
-                        if (payload[0].payload.isZeroCrossing) return null
-
-                        const pnlValue = payload[0].payload.pnl
-                        const isPositive = pnlValue >= 0
-                        const timestamp = payload[0].payload.timestamp
-
+                        const data = payload[0].payload
+                        const value = data.pnl
+                        const isPositive = value >= 0
                         return (
                           <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md">
                             <p className={`text-lg font-bold ${isPositive ? "text-green-600" : "text-red-600"}`}>
-                              {isPositive ? "+" : "-"}${Math.abs(pnlValue).toLocaleString()}
+                              {isPositive ? "+" : ""}${Math.abs(value).toLocaleString()}
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">{timestamp}</p>
+                            <p className="text-xs text-gray-500 mt-1">{data.timestamp}</p>
                           </div>
                         )
                       }
                       return null
                     }}
                   />
-
-                  {/* Green line for positive values */}
+                  {/* Positive PnL line (green) */}
                   <Line
                     type="monotone"
                     dataKey="pnlPositive"
                     stroke="#10b981"
                     strokeWidth={3}
                     dot={false}
-                    activeDot={({ dataKey, cx, cy, stroke, payload }) => {
-                      // Don't show active dot for zero crossing points
-                      if (payload.isZeroCrossing) return null
-                      return <circle cx={cx} cy={cy} r={6} stroke="#10b981" strokeWidth={2} fill="#ffffff" />
-                    }}
-                    connectNulls={true}
+                    activeDot={{ r: 6, stroke: "#10b981", strokeWidth: 2, fill: "#ffffff" }}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    connectNulls={false}
+                    isAnimationActive={true}
+                    animationDuration={1000}
                   />
-
-                  {/* Red line for negative values */}
+                  {/* Negative PnL line (red) */}
                   <Line
                     type="monotone"
                     dataKey="pnlNegative"
                     stroke="#ef4444"
                     strokeWidth={3}
                     dot={false}
-                    activeDot={({ dataKey, cx, cy, stroke, payload }) => {
-                      // Don't show active dot for zero crossing points
-                      if (payload.isZeroCrossing) return null
-                      return <circle cx={cx} cy={cy} r={6} stroke="#ef4444" strokeWidth={2} fill="#ffffff" />
-                    }}
-                    connectNulls={true}
+                    activeDot={{ r: 6, stroke: "#ef4444", strokeWidth: 2, fill: "#ffffff" }}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    connectNulls={false}
+                    isAnimationActive={true}
+                    animationDuration={1000}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -248,14 +222,14 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                 <span
                   className={`text-3xl font-black ${pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "text-green-500" : "text-red-500"}`}
                 >
-                  {pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "+" : "-"}$
+                  {pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "+" : ""}$
                   {Math.abs(pnlData[pnlTimeframe as keyof typeof pnlData].value).toLocaleString()}
                 </span>
                 <span
                   className={`ml-2 text-lg font-bold ${pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "text-green-500" : "text-red-500"}`}
                 >
-                  {pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "+" : "-"}
-                  {Math.abs(pnlData[pnlTimeframe as keyof typeof pnlData].percentage).toFixed(1)}%
+                  {pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "+" : ""}
+                  {pnlData[pnlTimeframe as keyof typeof pnlData].percentage}%
                 </span>
               </div>
               <p className="text-gray-600 text-sm mt-1">
