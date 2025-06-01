@@ -14,6 +14,35 @@ As a browser extension, Reflect works live, right alongside your trading activit
 
 Reflect integrates seamlessly with your existing Solana wallets. Simply connect your wallet, set your preferences, and let Reflect's AI begin analyzing your trading patterns and the broader market to provide personalized insights.
 
+## Installation
+
+### Required Dependencies
+
+\`\`\`bash
+npm install @privy-io/react-auth @privy-io/react-auth/solana @solana/web3.js @solana/spl-token
+\`\`\`
+
+### Optional: TradingView Lightweight Charts (Recommended)
+
+For enhanced chart functionality, install TradingView's Lightweight Charts:
+
+\`\`\`bash
+npm install lightweight-charts
+\`\`\`
+
+If you prefer to use the built-in Recharts implementation, the dashboard will work without this dependency.
+
+## Environment Variables
+
+Create a `.env.local` file with the following variables:
+
+\`\`\`env
+NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
+PRIVY_APP_SECRET=your_privy_app_secret
+NEXT_PUBLIC_SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+MORALIS_API_KEY=your_moralis_api_key
+\`\`\`
+
 ## Privacy & Security
 
 Your financial data never leaves your device. Reflect's AI runs locally when possible and all communications are end-to-end encrypted. We never store your private keys and you remain in complete control of your assets at all times.
