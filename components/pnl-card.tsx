@@ -31,8 +31,6 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: `${hour}:00`,
         pnl: Math.round(value),
-        pnlPositive: value > 0 ? Math.round(value) : null,
-        pnlNegative: value <= 0 ? Math.round(value) : null,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
@@ -50,8 +48,6 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: `${dayNames[date.getDay()]} ${hour}:00`,
         pnl: Math.round(value),
-        pnlPositive: value > 0 ? Math.round(value) : null,
-        pnlNegative: value <= 0 ? Math.round(value) : null,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
@@ -66,8 +62,6 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: `${date.getMonth() + 1}/${date.getDate()}`,
         pnl: Math.round(value),
-        pnlPositive: value > 0 ? Math.round(value) : null,
-        pnlNegative: value <= 0 ? Math.round(value) : null,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
@@ -84,13 +78,46 @@ const generateDetailedPnlData = (timeframe: string) => {
       return {
         time: monthNames[month],
         pnl: Math.round(value),
-        pnlPositive: value > 0 ? Math.round(value) : null,
-        pnlNegative: value <= 0 ? Math.round(value) : null,
         timestamp: date.toLocaleString(),
         isPositive: value > 0,
       }
     })
   }
+}
+
+// Create connected segments for smooth transitions
+const createConnectedSegments = (data: any[]) => {
+  const segments: any[] = []
+  let currentSegment: any[] = []
+  let currentIsPositive = data[0]?.pnl >= 0
+
+  data.forEach((point, index) => {
+    const isPositive = point.pnl >= 0
+
+    if (isPositive !== currentIsPositive && currentSegment.length > 0) {
+      // Add the current point to complete the segment
+      currentSegment.push(point)
+      segments.push({
+        data: currentSegment,
+        isPositive: currentIsPositive,
+      })
+      // Start new segment with the current point
+      currentSegment = [point]
+      currentIsPositive = isPositive
+    } else {
+      currentSegment.push(point)
+    }
+  })
+
+  // Add the last segment
+  if (currentSegment.length > 0) {
+    segments.push({
+      data: currentSegment,
+      isPositive: currentIsPositive,
+    })
+  }
+
+  return segments
 }
 
 export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
@@ -101,6 +128,8 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
   useEffect(() => {
     setDetailedPnlData(generateDetailedPnlData(pnlTimeframe))
   }, [pnlTimeframe])
+
+  const connectedSegments = createConnectedSegments(detailedPnlData)
 
   return (
     <Card
@@ -189,7 +218,7 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                         return (
                           <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md">
                             <p className={`text-lg font-bold ${isPositive ? "text-green-600" : "text-red-600"}`}>
-                              {isPositive ? "+" : ""}${Math.abs(pnlValue).toLocaleString()}
+                              {isPositive ? "+" : "-"}${Math.abs(pnlValue).toLocaleString()}
                             </p>
                             <p className="text-xs text-gray-500 mt-1">{timestamp}</p>
                           </div>
@@ -199,35 +228,24 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                     }}
                   />
 
-                  {/* Positive values line (green) */}
-                  <Line
-                    type="monotone"
-                    dataKey="pnlPositive"
-                    stroke="#10b981"
-                    strokeWidth={3}
-                    dot={false}
-                    activeDot={false}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    connectNulls={false}
-                    isAnimationActive={true}
-                    animationDuration={1000}
-                  />
-
-                  {/* Negative values line (red) */}
-                  <Line
-                    type="monotone"
-                    dataKey="pnlNegative"
-                    stroke="#ef4444"
-                    strokeWidth={3}
-                    dot={false}
-                    activeDot={false}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    connectNulls={false}
-                    isAnimationActive={true}
-                    animationDuration={1000}
-                  />
+                  {/* Render connected segments */}
+                  {connectedSegments.map((segment, index) => (
+                    <Line
+                      key={index}
+                      type="monotone"
+                      dataKey="pnl"
+                      data={segment.data}
+                      stroke={segment.isPositive ? "#10b981" : "#ef4444"}
+                      strokeWidth={3}
+                      dot={false}
+                      activeDot={false}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      connectNulls={true}
+                      isAnimationActive={true}
+                      animationDuration={1000}
+                    />
+                  ))}
 
                   {/* Invisible line for tooltip and active dot interaction */}
                   <Line
