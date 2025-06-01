@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { LineChart, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Tooltip } from "recharts"
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Tooltip } from "recharts"
 import { useEffect, useState } from "react"
 
 interface PnLCardProps {
@@ -93,6 +93,76 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
     setDetailedPnlData(generateDetailedPnlData(pnlTimeframe))
   }, [pnlTimeframe])
 
+  // Custom line renderer that creates segments between points
+  const CustomizedLine = (props: any) => {
+    const { points } = props
+
+    if (!points || points.length < 2) return null
+
+    return (
+      <g>
+        {points.map((point: any, index: number) => {
+          const color = detailedPnlData[index]?.isPositive ? "#10b981" : "#ef4444"
+
+          // Calculate segment endpoints
+          let startPoint = point
+          let endPoint = point
+
+          if (index > 0 && index < points.length - 1) {
+            // Middle points: draw from midpoint to previous to midpoint to next
+            const prevPoint = points[index - 1]
+            const nextPoint = points[index + 1]
+
+            startPoint = {
+              x: (prevPoint.x + point.x) / 2,
+              y: (prevPoint.y + point.y) / 2,
+            }
+
+            endPoint = {
+              x: (point.x + nextPoint.x) / 2,
+              y: (point.y + nextPoint.y) / 2,
+            }
+          } else if (index === 0 && points.length > 1) {
+            // First point: draw from point to midpoint to next
+            const nextPoint = points[index + 1]
+            endPoint = {
+              x: (point.x + nextPoint.x) / 2,
+              y: (point.y + nextPoint.y) / 2,
+            }
+          } else if (index === points.length - 1 && points.length > 1) {
+            // Last point: draw from midpoint to previous to point
+            const prevPoint = points[index - 1]
+            startPoint = {
+              x: (prevPoint.x + point.x) / 2,
+              y: (prevPoint.y + point.y) / 2,
+            }
+          }
+
+          return (
+            <g key={index}>
+              {/* Line segment */}
+              <line
+                x1={startPoint.x}
+                y1={startPoint.y}
+                x2={endPoint.x}
+                y2={endPoint.y}
+                stroke={color}
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+
+              {/* Hover dot */}
+              {hoveredPoint === index && (
+                <circle cx={point.x} cy={point.y} r={6} stroke={color} strokeWidth={2} fill="#ffffff" />
+              )}
+            </g>
+          )
+        })}
+      </g>
+    )
+  }
+
   // Custom tooltip component
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -182,61 +252,17 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                   <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
                   <Tooltip content={<CustomTooltip />} cursor={false} />
 
-                  {/* Custom line renderer */}
-                  <g>
-                    {detailedPnlData.map((point, index) => {
-                      if (detailedPnlData.length < 2) return null
-
-                      // Calculate chart dimensions and point positions
-                      const chartWidth = 300 // approximate chart width
-                      const chartHeight = 150 // approximate chart height
-                      const padding = 20
-
-                      const xStep = (chartWidth - padding * 2) / (detailedPnlData.length - 1)
-                      const minPnl = Math.min(...detailedPnlData.map((d) => d.pnl))
-                      const maxPnl = Math.max(...detailedPnlData.map((d) => d.pnl))
-                      const yRange = maxPnl - minPnl
-
-                      const x = padding + index * xStep
-                      const y = chartHeight - padding - ((point.pnl - minPnl) / yRange) * (chartHeight - padding * 2)
-
-                      // Calculate line segment endpoints
-                      let startX = x
-                      let endX = x
-
-                      if (index > 0) {
-                        const prevX = padding + (index - 1) * xStep
-                        startX = (prevX + x) / 2
-                      }
-
-                      if (index < detailedPnlData.length - 1) {
-                        const nextX = padding + (index + 1) * xStep
-                        endX = (nextX + x) / 2
-                      }
-
-                      const color = point.isPositive ? "#10b981" : "#ef4444"
-
-                      return (
-                        <g key={index}>
-                          {/* Line segment */}
-                          <line
-                            x1={startX}
-                            y1={y}
-                            x2={endX}
-                            y2={y}
-                            stroke={color}
-                            strokeWidth={3}
-                            strokeLinecap="round"
-                          />
-
-                          {/* Hover dot */}
-                          {hoveredPoint === index && (
-                            <circle cx={x} cy={y} r={6} stroke={color} strokeWidth={2} fill="#ffffff" />
-                          )}
-                        </g>
-                      )
-                    })}
-                  </g>
+                  {/* Use an invisible line to get the points, then render with our custom component */}
+                  <Line
+                    type="monotone"
+                    dataKey="pnl"
+                    stroke="transparent"
+                    strokeWidth={0}
+                    dot={false}
+                    activeDot={false}
+                    isAnimationActive={false}
+                    shape={<CustomizedLine />}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
