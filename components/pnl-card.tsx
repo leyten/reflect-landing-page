@@ -94,15 +94,30 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
   }, [pnlTimeframe])
 
   // Custom line renderer that creates segments between points
-  const CustomizedLine = (props: any) => {
-    const { points } = props
+  const CustomizedLine = () => {
+    // We'll calculate the points based on the chart data and dimensions
+    const chartWidth = 300 // This will be approximate
+    const chartHeight = 150
+    const margin = { top: 5, right: 5, left: 5, bottom: 5 }
 
-    if (!points || points.length < 2) return null
+    if (!detailedPnlData || detailedPnlData.length < 2) return null
+
+    // Calculate min/max for Y scaling
+    const minPnl = Math.min(...detailedPnlData.map((d) => d.pnl))
+    const maxPnl = Math.max(...detailedPnlData.map((d) => d.pnl))
+    const yRange = maxPnl - minPnl || 1
+
+    // Calculate points
+    const points = detailedPnlData.map((point, index) => {
+      const x = margin.left + (index / (detailedPnlData.length - 1)) * (chartWidth - margin.left - margin.right)
+      const y = margin.top + (1 - (point.pnl - minPnl) / yRange) * (chartHeight - margin.top - margin.bottom)
+      return { x, y, ...point }
+    })
 
     return (
       <g>
         {points.map((point: any, index: number) => {
-          const color = detailedPnlData[index]?.isPositive ? "#10b981" : "#ef4444"
+          const color = point.isPositive ? "#10b981" : "#ef4444"
 
           // Calculate segment endpoints
           let startPoint = point
@@ -252,7 +267,7 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                   <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
                   <Tooltip content={<CustomTooltip />} cursor={false} />
 
-                  {/* Use an invisible line to get the points, then render with our custom component */}
+                  {/* Use an invisible line to get the points and enable interaction */}
                   <Line
                     type="monotone"
                     dataKey="pnl"
@@ -261,8 +276,10 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                     dot={false}
                     activeDot={false}
                     isAnimationActive={false}
-                    shape={<CustomizedLine />}
                   />
+
+                  {/* Custom overlay for our line segments */}
+                  <CustomizedLine />
                 </LineChart>
               </ResponsiveContainer>
             </div>
