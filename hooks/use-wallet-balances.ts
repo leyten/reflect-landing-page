@@ -1,104 +1,99 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token"
 
-interface Token {
+// USDC token mint address on Solana
+const USDC_MINT = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")
+
+export interface TokenBalance {
   mint: string
-  symbol: string
-  name: string
+  balance: number
   decimals: number
   uiBalance: number
-  balance: string
+  symbol: string
 }
 
-interface WalletBalances {
+export interface WalletBalances {
   sol: number
-  tokens: Token[]
+  tokens: TokenBalance[]
   isLoading: boolean
   error: string | null
-  refetch: () => void
+  refetch: () => Promise<void>
 }
 
-export function useWalletBalances(walletAddress: string | undefined): WalletBalances {
-  const [sol, setSol] = useState(0)
-  const [tokens, setTokens] = useState<Token[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+export function useWalletBalances(address: string | undefined): WalletBalances {
+  const [sol, setSol] = useState<number>(0)
+  const [tokens, setTokens] = useState<TokenBalance[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-  const [refreshCounter, setRefreshCounter] = useState(0)
 
-  useEffect(() => {
-    if (!walletAddress) {
+  const fetchBalances = async () => {
+    if (!address) {
+      setIsLoading(false)
       return
     }
 
-    const fetchBalances = async () => {
-      setIsLoading(true)
-      setError(null)
+    setIsLoading(true)
+    setError(null)
 
-      try {
-        // Fetch SOL balance from our API route
-        const solResponse = await fetch(`/api/solana-balance?wallet=${walletAddress}`)
-        const solData = await solResponse.json()
+    try {
+      // Connect to Solana mainnet
+      const connection = new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC_URL!, "confirmed")
+      const publicKey = new PublicKey(address)
 
-        if (!solResponse.ok) {
-          throw new Error(solData.error || "Failed to fetch SOL balance")
+      // Fetch SOL balance
+      const solBalance = await connection.getBalance(publicKey)
+      setSol(solBalance / LAMPORTS_PER_SOL)
+
+      // Fetch token accounts
+      const tokenAccounts = await connection.getParsedTokenAccountsByOwner(publicKey, { programId: TOKEN_PROGRAM_ID })
+
+      // Process token accounts
+      const tokenBalances: TokenBalance[] = tokenAccounts.value.map((account) => {
+        const parsedInfo = account.account.data.parsed.info
+        const mintAddress = parsedInfo.mint
+        const balance = parsedInfo.tokenAmount.amount
+        const decimals = parsedInfo.tokenAmount.decimals
+        const uiBalance = parsedInfo.tokenAmount.uiAmount || 0
+
+        // Determine token symbol (in a real app, you'd have a more complete token list)
+        let symbol = "Unknown"
+        if (mintAddress === USDC_MINT.toString()) {
+          symbol = "USDC"
         }
 
-        // Mock token data (in production, you'd fetch this from a token API)
-        const mockTokens: Token[] = [
-          {
-            mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-            symbol: "USDC",
-            name: "USD Coin",
-            decimals: 6,
-            uiBalance: Math.random() * 1000 + 100,
-            balance: "0",
-          },
-          {
-            mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
-            symbol: "USDT",
-            name: "Tether USD",
-            decimals: 6,
-            uiBalance: Math.random() * 500 + 50,
-            balance: "0",
-          },
-          {
-            mint: "7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj",
-            symbol: "BONK",
-            name: "Bonk",
-            decimals: 5,
-            uiBalance: Math.random() * 10000000 + 1000000,
-            balance: "0",
-          },
-        ]
+        return {
+          mint: mintAddress,
+          balance: Number(balance),
+          decimals,
+          uiBalance,
+          symbol,
+        }
+      })
 
-        setSol(solData.balance)
-        setTokens(mockTokens)
-      } catch (err) {
-        console.error("Error fetching wallet balances:", err)
-        setError(err instanceof Error ? err.message : "Unknown error")
-
-        // Set mock data on error
-        const mockBalance = 1 + (Number.parseInt(walletAddress?.slice(-4) || "0", 16) % 100) / 10
-        setSol(mockBalance)
-        setTokens([])
-      } finally {
-        setIsLoading(false)
-      }
+      setTokens(tokenBalances)
+    } catch (err) {
+      console.error("Error fetching wallet balances:", err)
+      setError("Failed to fetch balances")
+    } finally {
+      setIsLoading(false)
     }
-
-    fetchBalances()
-  }, [walletAddress, refreshCounter])
-
-  const refetch = () => {
-    setRefreshCounter((prev) => prev + 1)
   }
+
+  useEffect(() => {
+    fetchBalances()
+    // Set up a refresh interval (every 30 seconds)
+    const intervalId = setInterval(fetchBalances, 30000)
+    return () => clearInterval(intervalId)
+  }, [address])
 
   return {
     sol,
     tokens,
     isLoading,
     error,
-    refetch,
+    refetch: fetchBalances,
   }
 }

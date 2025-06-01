@@ -83,57 +83,55 @@ export default function PerformanceChart({ isVisible }: PerformanceChartProps) {
               color: "#f8d300",
             },
           }}
-          className="mt-2"
+          className="h-[250px] mt-2 w-full"
         >
-          <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={getTimeframeData()} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#6b7280" }} />
-                <YAxis
-                  domain={[60, 80]}
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: "#6b7280" }}
-                  width={40}
-                />
-                <ChartTooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md">
-                          <p className="text-sm font-medium text-gray-900">
-                            Reflect Score: <span className="font-bold text-yellow-600">{payload[0].value}</span>
-                          </p>
-                        </div>
-                      )
-                    }
-                    return null
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="score"
-                  stroke="#f8d300"
-                  strokeWidth={4}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  dot={{
-                    fill: "#f8d300",
-                    strokeWidth: 2,
-                    r: 5,
-                    stroke: "#fff",
-                  }}
-                  activeDot={{
-                    r: 7,
-                    stroke: "#f8d300",
-                    strokeWidth: 2,
-                    fill: "#fff",
-                  }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={getTimeframeData()} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#6b7280" }} />
+              <YAxis
+                domain={[60, 80]}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: "#6b7280" }}
+                width={40}
+              />
+              <ChartTooltip
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md">
+                        <p className="text-sm font-medium text-gray-900">
+                          Reflect Score: <span className="font-bold text-yellow-600">{payload[0].value}</span>
+                        </p>
+                      </div>
+                    )
+                  }
+                  return null
+                }}
+              />
+              <Line
+                type="monotone"
+                dataKey="score"
+                stroke="#f8d300"
+                strokeWidth={4}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                dot={{
+                  fill: "#f8d300",
+                  strokeWidth: 2,
+                  r: 5,
+                  stroke: "#fff",
+                }}
+                activeDot={{
+                  r: 7,
+                  stroke: "#f8d300",
+                  strokeWidth: 2,
+                  fill: "#fff",
+                }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </ChartContainer>
       </CardContent>
     </Card>
