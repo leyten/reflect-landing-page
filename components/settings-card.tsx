@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
 import { useState } from "react"
 
 interface SettingsCardProps {
@@ -52,58 +51,25 @@ export default function SettingsCard({ isVisible }: SettingsCardProps) {
                 </div>
               </div>
               {setting.type === "slider" ? (
-                <div className="w-40">
-                  <div className="relative">
-                    {/* Stage labels */}
-                    <div className="flex justify-between text-xs font-medium text-gray-500 mb-3">
-                      <span
-                        className={`transition-colors duration-200 ${sensitivityValue[0] === 0 ? "text-yellow-600" : ""}`}
-                      >
-                        Low
-                      </span>
-                      <span
-                        className={`transition-colors duration-200 ${sensitivityValue[0] === 50 ? "text-yellow-600" : ""}`}
-                      >
-                        Balanced
-                      </span>
-                      <span
-                        className={`transition-colors duration-200 ${sensitivityValue[0] === 100 ? "text-yellow-600" : ""}`}
-                      >
-                        High
-                      </span>
-                    </div>
-
-                    {/* Custom track with stage indicators */}
-                    <div className="relative h-2 bg-gray-100 rounded-full mb-1">
-                      {/* Active track */}
-                      <div
-                        className="absolute h-2 bg-gradient-to-r from-yellow-300 to-yellow-500 rounded-full transition-all duration-300"
-                        style={{ width: `${sensitivityValue[0]}%` }}
-                      />
-
-                      {/* Stage dots */}
-                      <div className="absolute inset-0 flex justify-between items-center px-1">
-                        {[0, 50, 100].map((stage) => (
-                          <div
-                            key={stage}
-                            className={`w-3 h-3 rounded-full border-2 transition-all duration-200 ${
-                              sensitivityValue[0] === stage
-                                ? "bg-yellow-400 border-yellow-500 shadow-lg scale-110"
-                                : "bg-white border-gray-300 hover:border-gray-400"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    <Slider
-                      value={sensitivityValue}
-                      onValueChange={(value) => setSensitivityValue(snapToStage(value))}
-                      max={100}
-                      step={1}
-                      className="[&_[role=slider]]:opacity-0 [&_.slider-track]:opacity-0 [&_.slider-range]:opacity-0"
-                    />
-                  </div>
+                <div className="flex items-center space-x-3">
+                  {[
+                    { value: 0, label: "Low" },
+                    { value: 50, label: "Balanced" },
+                    { value: 100, label: "High" },
+                  ].map((stage) => (
+                    <button
+                      key={stage.value}
+                      onClick={() => setSensitivityValue([stage.value])}
+                      className={`w-8 h-8 rounded-full border-2 transition-all duration-200 flex items-center justify-center text-xs font-medium ${
+                        sensitivityValue[0] === stage.value
+                          ? "bg-yellow-400 border-yellow-500 text-black shadow-lg"
+                          : "bg-white border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-50"
+                      }`}
+                      title={stage.label}
+                    >
+                      {stage.label.charAt(0)}
+                    </button>
+                  ))}
                 </div>
               ) : (
                 <Switch defaultChecked={setting.checked} className="data-[state=checked]:bg-yellow-400" />
