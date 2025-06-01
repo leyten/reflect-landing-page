@@ -3,15 +3,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
+import { Slider } from "@/components/ui/slider"
 
 interface SettingsCardProps {
   isVisible: boolean
 }
 
 const settingsData = [
-  { title: "Popup Sensitivity", subtitle: "Balanced", checked: true },
-  { title: "URL Blocker", subtitle: "Enabled", checked: true },
-  { title: "Post-Trade Journal", subtitle: "Optional notes", checked: false },
+  { title: "Popup Sensitivity", subtitle: "Balanced", checked: true, type: "slider", value: [50] },
+  { title: "URL Blocker", subtitle: "Enabled", checked: true, type: "switch" },
+  { title: "Post-Trade Journal", subtitle: "Optional notes", checked: false, type: "switch" },
 ]
 
 export default function SettingsCard({ isVisible }: SettingsCardProps) {
@@ -32,7 +33,18 @@ export default function SettingsCard({ isVisible }: SettingsCardProps) {
                 <div className="text-sm font-semibold text-gray-900">{setting.title}</div>
                 <div className="text-xs text-gray-500">{setting.subtitle}</div>
               </div>
-              <Switch defaultChecked={setting.checked} className="data-[state=checked]:bg-yellow-400" />
+              {setting.type === "slider" ? (
+                <div className="w-24">
+                  <Slider
+                    defaultValue={setting.value}
+                    max={100}
+                    step={1}
+                    className="[&_[role=slider]]:bg-yellow-400 [&_[role=slider]]:border-yellow-400"
+                  />
+                </div>
+              ) : (
+                <Switch defaultChecked={setting.checked} className="data-[state=checked]:bg-yellow-400" />
+              )}
             </div>
           ))}
         </div>
