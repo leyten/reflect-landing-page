@@ -41,7 +41,7 @@ export default function MainScoreCard({ isVisible, walletAddress }: MainScoreCar
             Connected: {walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}
           </div>
         )}
-        <div className="text-7xl font-black text-black mb-2">
+        <div className="text-7xl font-black text-gray-900 mb-2">
           {animatedScore}
           <span className="text-4xl text-gray-400">/100</span>
         </div>
@@ -57,9 +57,9 @@ export default function MainScoreCard({ isVisible, walletAddress }: MainScoreCar
               <div className="text-sm text-gray-600 mb-3 font-medium">{item.label}</div>
               <div className="flex items-center space-x-3">
                 <div className="flex-1">
-                  <Progress value={item.value} className="h-3 bg-gray-200 [&>div]:bg-yellow-400" />
+                  <Progress value={item.value} className="h-3 bg-gray-200 [&>div]:bg-yellow-500" />
                 </div>
-                <span className="text-lg font-bold text-yellow-600">{item.value}%</span>
+                <span className="text-lg font-bold text-yellow-500">{item.value}%</span>
               </div>
             </div>
           ))}

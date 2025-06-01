@@ -23,7 +23,7 @@ export default function PsychologicalProfileCard({ isVisible }: PsychologicalPro
     >
       <CardHeader>
         <CardTitle className="text-xl font-bold text-gray-900">Your Profile</CardTitle>
-        <Badge className="w-fit bg-yellow-400 text-black font-bold">Impulsive Strategist</Badge>
+        <Badge className="w-fit bg-yellow-500 text-black font-bold">Impulsive Strategist</Badge>
       </CardHeader>
       <CardContent className="space-y-6">
         {profileData.map((item, i) => (
@@ -32,7 +32,7 @@ export default function PsychologicalProfileCard({ isVisible }: PsychologicalPro
               <span className="text-gray-600 font-medium">{item.label}</span>
               <span className="font-bold text-gray-800">{item.level}</span>
             </div>
-            <Progress value={item.value} className="h-3 bg-gray-200 [&>div]:bg-yellow-400" />
+            <Progress value={item.value} className="h-3 bg-gray-200 [&>div]:bg-yellow-500" />
           </div>
         ))}
       </CardContent>

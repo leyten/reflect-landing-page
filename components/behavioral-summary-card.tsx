@@ -7,10 +7,10 @@ interface BehavioralSummaryCardProps {
 }
 
 const behavioralData = [
-  { text: "Overtraded after losses (3 times)", color: "bg-red-400" },
-  { text: "Healthy pause after 2 red trades", color: "bg-yellow-400" },
-  { text: "Maintained consistent sizing", color: "bg-green-400" },
-  { text: "Improved weekend discipline", color: "bg-blue-400" },
+  { text: "Overtraded after losses (3 times)", color: "bg-red-500" },
+  { text: "Healthy pause after 2 red trades", color: "bg-yellow-500" },
+  { text: "Maintained consistent sizing", color: "bg-green-500" },
+  { text: "Improved weekend discipline", color: "bg-blue-500" },
 ]
 
 export default function BehavioralSummaryCard({ isVisible }: BehavioralSummaryCardProps) {

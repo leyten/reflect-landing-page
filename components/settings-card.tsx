@@ -62,7 +62,7 @@ export default function SettingsCard({ isVisible }: SettingsCardProps) {
                       onClick={() => setSensitivityValue([stage.value])}
                       className={`w-8 h-8 rounded-full border-2 transition-all duration-200 flex items-center justify-center text-xs font-medium ${
                         sensitivityValue[0] === stage.value
-                          ? "bg-yellow-400 border-yellow-500 text-black shadow-lg"
+                          ? "bg-yellow-500 border-yellow-600 text-black shadow-lg"
                           : "bg-white border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-50"
                       }`}
                       title={stage.label}
@@ -72,12 +72,12 @@ export default function SettingsCard({ isVisible }: SettingsCardProps) {
                   ))}
                 </div>
               ) : (
-                <Switch defaultChecked={setting.checked} className="data-[state=checked]:bg-yellow-400" />
+                <Switch defaultChecked={setting.checked} className="data-[state=checked]:bg-yellow-500" />
               )}
             </div>
           ))}
         </div>
-        <Button className="w-full bg-yellow-400 hover:bg-gray-900 text-black hover:text-white font-bold transition-colors duration-200 rounded-xl h-12">
+        <Button className="w-full bg-yellow-500 hover:bg-gray-900 text-black hover:text-white font-bold transition-colors duration-200 rounded-xl h-12">
           Export Data
         </Button>
       </CardContent>

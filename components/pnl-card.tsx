@@ -73,7 +73,7 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                 key={option}
                 onClick={() => setPnlTimeframe(option)}
                 className={`px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200 ${
-                  pnlTimeframe === option ? "bg-yellow-400 text-black" : "text-gray-600 hover:text-gray-900"
+                  pnlTimeframe === option ? "bg-yellow-500 text-black" : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 {option === "total" ? "All Time" : option.charAt(0).toUpperCase() + option.slice(1)}
@@ -94,10 +94,10 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                   : "All Time Performance"}
           </div>
           <div className="flex items-baseline justify-center mb-1">
-            <span className={`text-4xl font-black ${currentPnL.isPositive ? "text-green-500" : "text-red-500"}`}>
+            <span className={`text-4xl font-black ${currentPnL.isPositive ? "text-green-600" : "text-red-600"}`}>
               {currentPnL.isPositive ? "+" : ""}${Math.abs(currentPnL.value).toLocaleString()}
             </span>
-            <span className={`ml-2 text-xl font-bold ${currentPnL.isPositive ? "text-green-500" : "text-red-500"}`}>
+            <span className={`ml-2 text-xl font-bold ${currentPnL.isPositive ? "text-green-600" : "text-red-600"}`}>
               {currentPnL.isPositive ? "+" : ""}
               {currentPnL.percentage}%
             </span>
@@ -136,14 +136,14 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
           </div>
 
           {/* Win Rate */}
-          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-4 border border-yellow-200">
+          <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-xl p-4 border border-yellow-300">
             <div className="flex items-center justify-between mb-2">
               <div className="text-yellow-800 font-semibold text-xs uppercase tracking-wide">Win Rate</div>
               <div className="bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded-full text-xs font-bold">
                 {currentTrade.total}
               </div>
             </div>
-            <div className="text-2xl font-black text-yellow-600 mb-1">{currentWinRate}%</div>
+            <div className="text-2xl font-black text-yellow-500 mb-1">{currentWinRate}%</div>
             <div className="text-yellow-700 text-xs">
               {currentTrade.winning}W / {currentTrade.total - currentTrade.winning}L
             </div>

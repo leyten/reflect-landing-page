@@ -65,7 +65,7 @@ export default function PerformanceChart({ isVisible }: PerformanceChartProps) {
                 key={option}
                 onClick={() => setTimeframe(option)}
                 className={`px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200 ${
-                  timeframe === option ? "bg-yellow-400 text-black" : "text-gray-600"
+                  timeframe === option ? "bg-yellow-500 text-black" : "text-gray-600"
                 }`}
               >
                 {option.charAt(0).toUpperCase() + option.slice(1)}
@@ -113,19 +113,19 @@ export default function PerformanceChart({ isVisible }: PerformanceChartProps) {
               <Line
                 type="monotone"
                 dataKey="score"
-                stroke="#f8d300"
+                stroke="#eab308"
                 strokeWidth={4}
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 dot={{
-                  fill: "#f8d300",
+                  fill: "#eab308",
                   strokeWidth: 2,
                   r: 5,
                   stroke: "#fff",
                 }}
                 activeDot={{
                   r: 7,
-                  stroke: "#f8d300",
+                  stroke: "#eab308",
                   strokeWidth: 2,
                   fill: "#fff",
                 }}

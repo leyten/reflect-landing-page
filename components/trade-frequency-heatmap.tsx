@@ -39,10 +39,10 @@ export default function TradeFrequencyHeatmap({ isVisible }: TradeFrequencyHeatm
                   const intensity = Math.floor(Math.random() * 5)
                   const getColor = (value) => {
                     if (value === 0) return "#f8f9fa"
-                    if (value === 1) return "#fff3cd"
-                    if (value === 2) return "#ffeaa7"
-                    if (value === 3) return "#fdcb6e"
-                    return "#f39c12"
+                    if (value === 1) return "#fef3c7"
+                    if (value === 2) return "#fde68a"
+                    if (value === 3) return "#fcd34d"
+                    return "#eab308"
                   }
 
                   return (
@@ -77,12 +77,12 @@ export default function TradeFrequencyHeatmap({ isVisible }: TradeFrequencyHeatm
                       level === 0
                         ? "#f8f9fa"
                         : level === 1
-                          ? "#fff3cd"
+                          ? "#fef3c7"
                           : level === 2
-                            ? "#ffeaa7"
+                            ? "#fde68a"
                             : level === 3
-                              ? "#fdcb6e"
-                              : "#f39c12",
+                              ? "#fcd34d"
+                              : "#eab308",
                   }}
                 />
               ))}
