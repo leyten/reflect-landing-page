@@ -187,7 +187,6 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                     }}
                   />
                   <YAxis hide />
-
                   <ChartTooltip
                     cursor={false}
                     content={({ active, payload }) => {
