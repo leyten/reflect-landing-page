@@ -93,93 +93,6 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
     setDetailedPnlData(generateDetailedPnlData(pnlTimeframe))
   }, [pnlTimeframe])
 
-  // Custom line renderer that creates segments between points
-  const CustomizedLine = (props: any) => {
-    const { points } = props
-
-    if (!points || points.length < 2) return null
-
-    return (
-      <g>
-        {points.map((point: any, index: number) => {
-          if (index === 0 || index === points.length - 1) return null
-
-          const prevPoint = points[index - 1]
-          const nextPoint = points[index + 1]
-
-          // Calculate midpoints between current point and adjacent points
-          const midPointToPrev = {
-            x: (point.x + prevPoint.x) / 2,
-            y: (point.y + prevPoint.y) / 2,
-          }
-
-          const midPointToNext = {
-            x: (point.x + nextPoint.x) / 2,
-            y: (point.y + nextPoint.y) / 2,
-          }
-
-          // Get the color based on the point's value
-          const isPositive = detailedPnlData[index].isPositive
-          const color = isPositive ? "#10b981" : "#ef4444"
-
-          return (
-            <path
-              key={index}
-              d={`M${midPointToPrev.x},${midPointToPrev.y} L${point.x},${point.y} L${midPointToNext.x},${midPointToNext.y}`}
-              stroke={color}
-              strokeWidth={3}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          )
-        })}
-
-        {/* Handle first point - draw from point to midpoint */}
-        {points.length >= 2 && (
-          <path
-            d={`M${points[0].x},${points[0].y} L${(points[0].x + points[1].x) / 2},${(points[0].y + points[1].y) / 2}`}
-            stroke={detailedPnlData[0].isPositive ? "#10b981" : "#ef4444"}
-            strokeWidth={3}
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        )}
-
-        {/* Handle last point - draw from midpoint to point */}
-        {points.length >= 2 && (
-          <path
-            d={`M${(points[points.length - 2].x + points[points.length - 1].x) / 2},${(points[points.length - 2].y + points[points.length - 1].y) / 2} L${points[points.length - 1].x},${points[points.length - 1].y}`}
-            stroke={detailedPnlData[points.length - 1].isPositive ? "#10b981" : "#ef4444"}
-            strokeWidth={3}
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        )}
-
-        {/* Render dots only for hovered point */}
-        {points.map((point: any, index: number) => {
-          const isPositive = detailedPnlData[index].isPositive
-          const color = isPositive ? "#10b981" : "#ef4444"
-
-          return hoveredPoint === index ? (
-            <circle
-              key={`dot-${index}`}
-              cx={point.x}
-              cy={point.y}
-              r={6}
-              stroke={color}
-              strokeWidth={2}
-              fill="#ffffff"
-            />
-          ) : null
-        })}
-      </g>
-    )
-  }
-
   // Custom tooltip component
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -269,25 +182,61 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                   <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
                   <Tooltip content={<CustomTooltip />} cursor={false} />
 
-                  {/* Use a dummy line to get the points, but render with our custom component */}
-                  <defs>
-                    <linearGradient id="colorPnl" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0} />
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
+                  {/* Custom line renderer */}
+                  <g>
+                    {detailedPnlData.map((point, index) => {
+                      if (detailedPnlData.length < 2) return null
 
-                  {/* This is our invisible line that provides the points for our custom renderer */}
-                  <LineChart.Line
-                    type="monotone"
-                    dataKey="pnl"
-                    stroke="url(#colorPnl)"
-                    strokeWidth={0}
-                    dot={false}
-                    activeDot={false}
-                    isAnimationActive={false}
-                    shape={<CustomizedLine />}
-                  />
+                      // Calculate chart dimensions and point positions
+                      const chartWidth = 300 // approximate chart width
+                      const chartHeight = 150 // approximate chart height
+                      const padding = 20
+
+                      const xStep = (chartWidth - padding * 2) / (detailedPnlData.length - 1)
+                      const minPnl = Math.min(...detailedPnlData.map((d) => d.pnl))
+                      const maxPnl = Math.max(...detailedPnlData.map((d) => d.pnl))
+                      const yRange = maxPnl - minPnl
+
+                      const x = padding + index * xStep
+                      const y = chartHeight - padding - ((point.pnl - minPnl) / yRange) * (chartHeight - padding * 2)
+
+                      // Calculate line segment endpoints
+                      let startX = x
+                      let endX = x
+
+                      if (index > 0) {
+                        const prevX = padding + (index - 1) * xStep
+                        startX = (prevX + x) / 2
+                      }
+
+                      if (index < detailedPnlData.length - 1) {
+                        const nextX = padding + (index + 1) * xStep
+                        endX = (nextX + x) / 2
+                      }
+
+                      const color = point.isPositive ? "#10b981" : "#ef4444"
+
+                      return (
+                        <g key={index}>
+                          {/* Line segment */}
+                          <line
+                            x1={startX}
+                            y1={y}
+                            x2={endX}
+                            y2={y}
+                            stroke={color}
+                            strokeWidth={3}
+                            strokeLinecap="round"
+                          />
+
+                          {/* Hover dot */}
+                          {hoveredPoint === index && (
+                            <circle cx={x} cy={y} r={6} stroke={color} strokeWidth={2} fill="#ffffff" />
+                          )}
+                        </g>
+                      )
+                    })}
+                  </g>
                 </LineChart>
               </ResponsiveContainer>
             </div>
