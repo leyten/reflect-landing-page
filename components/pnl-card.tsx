@@ -64,15 +64,15 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       }`}
     >
-      <CardContent className="p-8">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">Trading Overview</h2>
-          <div className="flex items-center space-x-2 bg-gray-50 rounded-lg p-1">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">Trading Overview</h2>
+          <div className="flex items-center space-x-1 bg-gray-50 rounded-lg p-1">
             {["day", "week", "month", "total"].map((option) => (
               <button
                 key={option}
                 onClick={() => setPnlTimeframe(option)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200 ${
                   pnlTimeframe === option ? "bg-yellow-400 text-black" : "text-gray-600 hover:text-gray-900"
                 }`}
               >
@@ -82,9 +82,9 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
           </div>
         </div>
 
-        {/* Main PnL Display */}
-        <div className="text-center mb-8">
-          <div className="text-sm text-gray-500 mb-2 uppercase tracking-wide font-medium">
+        {/* Main PnL Display - More Compact */}
+        <div className="text-center mb-6">
+          <div className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">
             {pnlTimeframe === "day"
               ? "Today's Performance"
               : pnlTimeframe === "week"
@@ -93,75 +93,59 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                   ? "This Month's Performance"
                   : "All Time Performance"}
           </div>
-          <div className="flex items-baseline justify-center mb-2">
-            <span className={`text-5xl font-black ${currentPnL.isPositive ? "text-green-500" : "text-red-500"}`}>
+          <div className="flex items-baseline justify-center mb-1">
+            <span className={`text-4xl font-black ${currentPnL.isPositive ? "text-green-500" : "text-red-500"}`}>
               {currentPnL.isPositive ? "+" : ""}${Math.abs(currentPnL.value).toLocaleString()}
             </span>
-            <span className={`ml-3 text-2xl font-bold ${currentPnL.isPositive ? "text-green-500" : "text-red-500"}`}>
+            <span className={`ml-2 text-xl font-bold ${currentPnL.isPositive ? "text-green-500" : "text-red-500"}`}>
               {currentPnL.isPositive ? "+" : ""}
               {currentPnL.percentage}%
             </span>
           </div>
-          <div className="text-gray-600 text-sm">Net Profit & Loss</div>
+          <div className="text-gray-600 text-xs">Net Profit & Loss</div>
         </div>
 
-        {/* Buy/Sell Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Compact 3-Column Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Total Buy */}
-          <div className="bg-red-50 rounded-2xl p-6 border border-red-100">
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-red-700 font-semibold text-sm uppercase tracking-wide">Total Buy</div>
-              <div className="bg-red-200 text-red-800 px-2 py-1 rounded-full text-xs font-bold">
-                {currentBuy.transactions} transactions
+          <div className="bg-red-50 rounded-xl p-4 border border-red-100">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-red-700 font-semibold text-xs uppercase tracking-wide">Buy</div>
+              <div className="bg-red-200 text-red-800 px-2 py-0.5 rounded-full text-xs font-bold">
+                {currentBuy.transactions}
               </div>
             </div>
-            <div className="text-3xl font-black text-red-600 mb-1">${currentBuy.amount.toLocaleString()}</div>
-            <div className="text-red-600 text-sm">
-              Avg: ${Math.round(currentBuy.amount / currentBuy.transactions).toLocaleString()} per transaction
+            <div className="text-2xl font-black text-red-600 mb-1">${currentBuy.amount.toLocaleString()}</div>
+            <div className="text-red-600 text-xs">
+              ${Math.round(currentBuy.amount / currentBuy.transactions).toLocaleString()} avg
             </div>
           </div>
 
           {/* Total Sell */}
-          <div className="bg-green-50 rounded-2xl p-6 border border-green-100">
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-green-700 font-semibold text-sm uppercase tracking-wide">Total Sell</div>
-              <div className="bg-green-200 text-green-800 px-2 py-1 rounded-full text-xs font-bold">
-                {currentSell.transactions} transactions
+          <div className="bg-green-50 rounded-xl p-4 border border-green-100">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-green-700 font-semibold text-xs uppercase tracking-wide">Sell</div>
+              <div className="bg-green-200 text-green-800 px-2 py-0.5 rounded-full text-xs font-bold">
+                {currentSell.transactions}
               </div>
             </div>
-            <div className="text-3xl font-black text-green-600 mb-1">${currentSell.amount.toLocaleString()}</div>
-            <div className="text-green-600 text-sm">
-              Avg: ${Math.round(currentSell.amount / currentSell.transactions).toLocaleString()} per transaction
-            </div>
-          </div>
-        </div>
-
-        {/* Win Rate Section */}
-        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-6 border border-yellow-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-yellow-800 font-semibold text-sm uppercase tracking-wide mb-2">Win Rate</div>
-              <div className="text-4xl font-black text-yellow-600 mb-1">{currentWinRate}%</div>
-              <div className="text-yellow-700 text-sm">{currentTrade.winning} winning trades</div>
-            </div>
-            <div className="text-right">
-              <div className="text-yellow-800 font-semibold text-sm uppercase tracking-wide mb-2">Total Trades</div>
-              <div className="text-3xl font-black text-yellow-600 mb-1">{currentTrade.total}</div>
-              <div className="text-yellow-700 text-sm">{currentTrade.total - currentTrade.winning} losing trades</div>
+            <div className="text-2xl font-black text-green-600 mb-1">${currentSell.amount.toLocaleString()}</div>
+            <div className="text-green-600 text-xs">
+              ${Math.round(currentSell.amount / currentSell.transactions).toLocaleString()} avg
             </div>
           </div>
 
-          {/* Win Rate Progress Bar */}
-          <div className="mt-4">
-            <div className="flex justify-between text-xs text-yellow-700 mb-2">
-              <span>Losses</span>
-              <span>Wins</span>
+          {/* Win Rate */}
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-4 border border-yellow-200">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-yellow-800 font-semibold text-xs uppercase tracking-wide">Win Rate</div>
+              <div className="bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded-full text-xs font-bold">
+                {currentTrade.total}
+              </div>
             </div>
-            <div className="h-3 bg-yellow-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full transition-all duration-500"
-                style={{ width: `${currentWinRate}%` }}
-              ></div>
+            <div className="text-2xl font-black text-yellow-600 mb-1">{currentWinRate}%</div>
+            <div className="text-yellow-700 text-xs">
+              {currentTrade.winning}W / {currentTrade.total - currentTrade.winning}L
             </div>
           </div>
         </div>
