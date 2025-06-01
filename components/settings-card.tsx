@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
+import { useState } from "react"
 
 interface SettingsCardProps {
   isVisible: boolean
@@ -16,6 +17,14 @@ const settingsData = [
 ]
 
 export default function SettingsCard({ isVisible }: SettingsCardProps) {
+  const [sensitivityValue, setSensitivityValue] = useState([50])
+
+  const getSensitivityLabel = (value: number) => {
+    if (value <= 33) return "Low"
+    if (value <= 66) return "Balanced"
+    return "High"
+  }
+
   return (
     <Card
       className={`bg-white shadow-lg border-0 rounded-3xl transition-all duration-700 delay-300 h-full ${
@@ -31,12 +40,15 @@ export default function SettingsCard({ isVisible }: SettingsCardProps) {
             <div key={i} className="flex items-center justify-between p-3.5 rounded-xl transition-colors duration-200">
               <div>
                 <div className="text-sm font-semibold text-gray-900">{setting.title}</div>
-                <div className="text-xs text-gray-500">{setting.subtitle}</div>
+                <div className="text-xs text-gray-500">
+                  {setting.type === "slider" ? getSensitivityLabel(sensitivityValue[0]) : setting.subtitle}
+                </div>
               </div>
               {setting.type === "slider" ? (
                 <div className="w-24">
                   <Slider
-                    defaultValue={setting.value}
+                    value={sensitivityValue}
+                    onValueChange={setSensitivityValue}
                     max={100}
                     step={1}
                     className="[&_[role=slider]]:bg-yellow-400 [&_[role=slider]]:border-yellow-400"
