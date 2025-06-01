@@ -164,19 +164,61 @@ export default function ReflectDashboard() {
   const chartAnimation = useScrollAnimation()
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
+      {/* Animated Background Effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        {/* Floating Orbs */}
+        <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-yellow-200/20 to-yellow-400/10 rounded-full blur-xl animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-br from-blue-200/15 to-blue-400/10 rounded-full blur-lg animate-pulse delay-1000"></div>
+        <div className="absolute bottom-40 left-1/4 w-20 h-20 bg-gradient-to-br from-green-200/15 to-green-400/10 rounded-full blur-lg animate-pulse delay-2000"></div>
+        <div className="absolute bottom-20 right-1/3 w-28 h-28 bg-gradient-to-br from-purple-200/15 to-purple-400/10 rounded-full blur-xl animate-pulse delay-3000"></div>
+
+        {/* Subtle Grid Pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: "50px 50px",
+          }}
+        ></div>
+
+        {/* Animated Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/30 via-transparent to-blue-50/20 animate-pulse duration-[8000ms]"></div>
+
+        {/* Floating Particles */}
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className={`absolute w-1 h-1 bg-yellow-400/30 rounded-full animate-bounce`}
+            style={{
+              left: `${20 + i * 15}%`,
+              top: `${30 + i * 10}%`,
+              animationDelay: `${i * 1000}ms`,
+              animationDuration: `${3000 + i * 500}ms`,
+            }}
+          ></div>
+        ))}
+      </div>
+
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-5 sticky top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 px-6 py-5 sticky top-0 z-50">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center space-x-3">
             <img
               src="/images/LogoTransparent.png"
               alt="Reflect Logo"
-              className="h-10 w-10 transition-transform duration-200 rounded-lg"
+              className="h-10 w-10 transition-transform duration-200 rounded-lg hover:scale-105"
             />
           </div>
           <div className="absolute left-1/2 transform -translate-x-1/2">
-            <img src="/images/bannerLarge.png" alt="Reflect Banner" className="h-8 transition-transform duration-200" />
+            <img
+              src="/images/bannerLarge.png"
+              alt="Reflect Banner"
+              className="h-8 transition-transform duration-200 hover:scale-105"
+            />
           </div>
           <div className="flex items-center space-x-4">
             <PrivyDropdown />
@@ -184,7 +226,7 @@ export default function ReflectDashboard() {
         </div>
       </header>
 
-      <div className="relative max-w-7xl mx-auto px-6 py-10">
+      <div className="relative max-w-7xl mx-auto px-6 py-10 z-10">
         {/* Main Score Card */}
         <div ref={mainScoreAnimation.ref}>
           <MainScoreCard isVisible={mainScoreAnimation.isVisible} walletAddress={primaryWallet?.address} />
