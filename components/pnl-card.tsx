@@ -1,8 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine } from "recharts"
-import { ChartTooltip } from "@/components/ui/chart"
+import { XAxis, YAxis, ResponsiveContainer, ReferenceLine, ComposedChart, Area, Tooltip } from "recharts"
 import { useEffect, useState } from "react"
 
 interface PnLCardProps {
@@ -32,7 +31,6 @@ const generateDetailedPnlData = (timeframe: string) => {
         time: `${hour}:00`,
         pnl: Math.round(value),
         timestamp: date.toLocaleString(),
-        isPositive: value > 0,
       }
     })
   } else if (timeframe === "week") {
@@ -49,7 +47,6 @@ const generateDetailedPnlData = (timeframe: string) => {
         time: `${dayNames[date.getDay()]} ${hour}:00`,
         pnl: Math.round(value),
         timestamp: date.toLocaleString(),
-        isPositive: value > 0,
       }
     })
   } else if (timeframe === "month") {
@@ -63,7 +60,6 @@ const generateDetailedPnlData = (timeframe: string) => {
         time: `${date.getMonth() + 1}/${date.getDate()}`,
         pnl: Math.round(value),
         timestamp: date.toLocaleString(),
-        isPositive: value > 0,
       }
     })
   } else {
@@ -79,45 +75,48 @@ const generateDetailedPnlData = (timeframe: string) => {
         time: monthNames[month],
         pnl: Math.round(value),
         timestamp: date.toLocaleString(),
-        isPositive: value > 0,
       }
     })
   }
 }
 
-// Create connected segments for smooth transitions
-const createConnectedSegments = (data: any[]) => {
-  const segments: any[] = []
-  let currentSegment: any[] = []
-  let currentIsPositive = data[0]?.pnl >= 0
+// Custom gradient defs for the chart
+const CustomGradient = () => {
+  return (
+    <defs>
+      <linearGradient id="positiveGradient" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+      </linearGradient>
+      <linearGradient id="negativeGradient" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+      </linearGradient>
+    </defs>
+  )
+}
 
-  data.forEach((point, index) => {
-    const isPositive = point.pnl >= 0
+// Custom dot component that changes color based on value
+const CustomDot = (props: any) => {
+  const { cx, cy, payload } = props
+  const isPositive = payload.pnl >= 0
 
-    if (isPositive !== currentIsPositive && currentSegment.length > 0) {
-      // Add the current point to complete the segment
-      currentSegment.push(point)
-      segments.push({
-        data: currentSegment,
-        isPositive: currentIsPositive,
-      })
-      // Start new segment with the current point
-      currentSegment = [point]
-      currentIsPositive = isPositive
-    } else {
-      currentSegment.push(point)
-    }
-  })
-
-  // Add the last segment
-  if (currentSegment.length > 0) {
-    segments.push({
-      data: currentSegment,
-      isPositive: currentIsPositive,
-    })
+  if (props.active) {
+    return <circle cx={cx} cy={cy} r={6} stroke={isPositive ? "#10b981" : "#ef4444"} strokeWidth={2} fill="#ffffff" />
   }
+  return null
+}
 
-  return segments
+// Custom path component that changes color based on value
+const CustomizedDot = (props: any) => {
+  const { cx, cy, stroke, payload, index } = props
+
+  if (index % 5 === 0) {
+    // Only show dots every 5 points to avoid clutter
+    const isPositive = payload.pnl >= 0
+    return <circle cx={cx} cy={cy} r={3} fill={isPositive ? "#10b981" : "#ef4444"} />
+  }
+  return null
 }
 
 export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
@@ -129,7 +128,16 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
     setDetailedPnlData(generateDetailedPnlData(pnlTimeframe))
   }, [pnlTimeframe])
 
-  const connectedSegments = createConnectedSegments(detailedPnlData)
+  // Split data into positive and negative series
+  const positiveData = detailedPnlData.map((item) => ({
+    ...item,
+    positivePnl: item.pnl >= 0 ? item.pnl : null,
+  }))
+
+  const negativeData = detailedPnlData.map((item) => ({
+    ...item,
+    negativePnl: item.pnl < 0 ? item.pnl : null,
+  }))
 
   return (
     <Card
@@ -186,7 +194,7 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
           <div className="flex flex-col items-center">
             <div className="w-full h-[150px] overflow-hidden">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart
+                <ComposedChart
                   data={detailedPnlData}
                   margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
                   onMouseMove={(e) => {
@@ -196,18 +204,11 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                   }}
                   onMouseLeave={() => setActiveTooltipIndex(null)}
                 >
-                  {activeTooltipIndex !== null && (
-                    <ReferenceLine
-                      x={detailedPnlData[activeTooltipIndex]?.time}
-                      stroke="#d1d5db"
-                      strokeDasharray="3 3"
-                      strokeOpacity={0.7}
-                    />
-                  )}
+                  <CustomGradient />
                   <XAxis dataKey="time" tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis hide />
                   <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
-                  <ChartTooltip
+                  <Tooltip
                     cursor={false}
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
@@ -228,50 +229,24 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                     }}
                   />
 
-                  {/* Render connected segments */}
-                  {connectedSegments.map((segment, index) => (
-                    <Line
-                      key={index}
-                      type="monotone"
-                      dataKey="pnl"
-                      data={segment.data}
-                      stroke={segment.isPositive ? "#10b981" : "#ef4444"}
-                      strokeWidth={3}
-                      dot={false}
-                      activeDot={false}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      connectNulls={true}
-                      isAnimationActive={true}
-                      animationDuration={1000}
-                    />
-                  ))}
-
-                  {/* Invisible line for tooltip and active dot interaction */}
-                  <Line
+                  {/* Positive area */}
+                  <Area
                     type="monotone"
                     dataKey="pnl"
-                    stroke="transparent"
-                    strokeWidth={0}
-                    dot={false}
-                    activeDot={(props: any) => {
-                      const { cx, cy } = props
-                      const pnlValue = props.payload.pnl as number
-                      const isPositive = pnlValue >= 0
-                      return (
-                        <circle
-                          cx={cx}
-                          cy={cy}
-                          r={6}
-                          stroke={isPositive ? "#10b981" : "#ef4444"}
-                          strokeWidth={2}
-                          fill="#ffffff"
-                        />
-                      )
-                    }}
+                    stroke="#10b981"
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill="url(#positiveGradient)"
+                    activeDot={CustomDot}
+                    dot={CustomizedDot}
+                    isAnimationActive={true}
+                    animationDuration={1000}
                     connectNulls={true}
+                    baseValue={0}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
-                </LineChart>
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
 
@@ -280,14 +255,14 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                 <span
                   className={`text-3xl font-black ${pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "text-green-500" : "text-red-500"}`}
                 >
-                  {pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "+" : ""}$
+                  {pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "+" : "-"}$
                   {Math.abs(pnlData[pnlTimeframe as keyof typeof pnlData].value).toLocaleString()}
                 </span>
                 <span
                   className={`ml-2 text-lg font-bold ${pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "text-green-500" : "text-red-500"}`}
                 >
-                  {pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "+" : ""}
-                  {pnlData[pnlTimeframe as keyof typeof pnlData].percentage}%
+                  {pnlData[pnlTimeframe as keyof typeof pnlData].isPositive ? "+" : "-"}
+                  {Math.abs(pnlData[pnlTimeframe as keyof typeof pnlData].percentage)}%
                 </span>
               </div>
               <p className="text-gray-600 text-sm mt-1">
