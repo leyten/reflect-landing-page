@@ -52,34 +52,58 @@ export default function SettingsCard({ isVisible }: SettingsCardProps) {
                 </div>
               </div>
               {setting.type === "slider" ? (
-                <div className="w-32">
-                  <div className="relative mb-2">
-                    {/* Stage indicators */}
-                    <div className="flex justify-between text-xs text-gray-400 mb-1">
-                      <span className={sensitivityValue[0] === 0 ? "text-yellow-600 font-bold" : ""}>Low</span>
-                      <span className={sensitivityValue[0] === 50 ? "text-yellow-600 font-bold" : ""}>Bal</span>
-                      <span className={sensitivityValue[0] === 100 ? "text-yellow-600 font-bold" : ""}>High</span>
+                <div className="w-40">
+                  <div className="relative">
+                    {/* Stage labels */}
+                    <div className="flex justify-between text-xs font-medium text-gray-500 mb-3">
+                      <span
+                        className={`transition-colors duration-200 ${sensitivityValue[0] === 0 ? "text-yellow-600" : ""}`}
+                      >
+                        Low
+                      </span>
+                      <span
+                        className={`transition-colors duration-200 ${sensitivityValue[0] === 50 ? "text-yellow-600" : ""}`}
+                      >
+                        Balanced
+                      </span>
+                      <span
+                        className={`transition-colors duration-200 ${sensitivityValue[0] === 100 ? "text-yellow-600" : ""}`}
+                      >
+                        High
+                      </span>
                     </div>
-                    {/* Stage dots */}
-                    <div className="flex justify-between absolute -top-1 left-0 right-0">
+
+                    {/* Custom track with stage indicators */}
+                    <div className="relative h-2 bg-gray-100 rounded-full mb-1">
+                      {/* Active track */}
                       <div
-                        className={`w-2 h-2 rounded-full ${sensitivityValue[0] === 0 ? "bg-yellow-400" : "bg-gray-300"}`}
-                      ></div>
-                      <div
-                        className={`w-2 h-2 rounded-full ${sensitivityValue[0] === 50 ? "bg-yellow-400" : "bg-gray-300"}`}
-                      ></div>
-                      <div
-                        className={`w-2 h-2 rounded-full ${sensitivityValue[0] === 100 ? "bg-yellow-400" : "bg-gray-300"}`}
-                      ></div>
+                        className="absolute h-2 bg-gradient-to-r from-yellow-300 to-yellow-500 rounded-full transition-all duration-300"
+                        style={{ width: `${sensitivityValue[0]}%` }}
+                      />
+
+                      {/* Stage dots */}
+                      <div className="absolute inset-0 flex justify-between items-center px-1">
+                        {[0, 50, 100].map((stage) => (
+                          <div
+                            key={stage}
+                            className={`w-3 h-3 rounded-full border-2 transition-all duration-200 ${
+                              sensitivityValue[0] === stage
+                                ? "bg-yellow-400 border-yellow-500 shadow-lg scale-110"
+                                : "bg-white border-gray-300 hover:border-gray-400"
+                            }`}
+                          />
+                        ))}
+                      </div>
                     </div>
+
+                    <Slider
+                      value={sensitivityValue}
+                      onValueChange={(value) => setSensitivityValue(snapToStage(value))}
+                      max={100}
+                      step={1}
+                      className="[&_[role=slider]]:opacity-0 [&_.slider-track]:opacity-0 [&_.slider-range]:opacity-0"
+                    />
                   </div>
-                  <Slider
-                    value={sensitivityValue}
-                    onValueChange={(value) => setSensitivityValue(snapToStage(value))}
-                    max={100}
-                    step={1}
-                    className="[&_[role=slider]]:bg-yellow-400 [&_[role=slider]]:border-yellow-400"
-                  />
                 </div>
               ) : (
                 <Switch defaultChecked={setting.checked} className="data-[state=checked]:bg-yellow-400" />
