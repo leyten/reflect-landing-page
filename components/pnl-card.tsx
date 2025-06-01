@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine, CartesianGrid } from "recharts"
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine } from "recharts"
 import { ChartTooltip } from "@/components/ui/chart"
 import { useEffect, useState } from "react"
 
@@ -77,11 +77,9 @@ const generateDetailedPnlData = (timeframe: string) => {
     })
   }
 
-  // Split data into positive and negative for different colored lines
+  // Return data with display formatting
   return rawData.map((item) => ({
     ...item,
-    pnlPositive: item.pnl >= 0 ? item.pnl : null,
-    pnlNegative: item.pnl < 0 ? item.pnl : null,
     displayTime:
       timeframe === "day"
         ? new Date(item.time).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
@@ -100,6 +98,17 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
   useEffect(() => {
     setDetailedPnlData(generateDetailedPnlData(pnlTimeframe))
   }, [pnlTimeframe])
+
+  // Split data for positive and negative values
+  const positiveData = detailedPnlData.map((d) => ({
+    ...d,
+    pnl: d.pnl >= 0 ? d.pnl : null,
+  }))
+
+  const negativeData = detailedPnlData.map((d) => ({
+    ...d,
+    pnl: d.pnl < 0 ? d.pnl : null,
+  }))
 
   return (
     <Card
@@ -156,22 +165,35 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
           <div className="flex flex-col items-center">
             <div className="w-full h-[150px] overflow-hidden">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={detailedPnlData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <LineChart margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.3} />
+                    </linearGradient>
+                    <linearGradient id="redGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#ef4444" stopOpacity={0.8} />
+                      <stop offset="100%" stopColor="#ef4444" stopOpacity={0.3} />
+                    </linearGradient>
+                  </defs>
+
                   <XAxis
                     dataKey="displayTime"
+                    type="category"
                     tick={{ fill: "#6b7280", fontSize: 10 }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis hide />
                   <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={2} />
+                  
                   <ChartTooltip
                     cursor={{ stroke: "#d1d5db", strokeDasharray: "3 3" }}
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
                         const data = payload[0].payload
                         const value = data.pnl
+                        if (value === null) return null
                         const isPositive = value >= 0
                         return (
                           <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md">
@@ -185,31 +207,35 @@ export default function PnLCard({ isVisible, walletAddress }: PnLCardProps) {
                       return null
                     }}
                   />
-                  {/* Positive PnL line (green) */}
+
+                  {/* Positive PnL line with gradient */}
                   <Line
                     type="monotone"
-                    dataKey="pnlPositive"
-                    stroke="#10b981"
+                    data={positiveData}
+                    dataKey="pnl"
+                    stroke="url(#greenGradient)"
                     strokeWidth={3}
                     dot={false}
                     activeDot={{ r: 6, stroke: "#10b981", strokeWidth: 2, fill: "#ffffff" }}
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    connectNulls={false}
+                    connectNulls={true}
                     isAnimationActive={true}
                     animationDuration={1000}
                   />
-                  {/* Negative PnL line (red) */}
+
+                  {/* Negative PnL line with gradient */}
                   <Line
                     type="monotone"
-                    dataKey="pnlNegative"
-                    stroke="#ef4444"
+                    data={negativeData}
+                    dataKey="pnl"
+                    stroke="url(#redGradient)"
                     strokeWidth={3}
                     dot={false}
                     activeDot={{ r: 6, stroke: "#ef4444", strokeWidth: 2, fill: "#ffffff" }}
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    connectNulls={false}
+                    connectNulls={true}
                     isAnimationActive={true}
                     animationDuration={1000}
                   />
