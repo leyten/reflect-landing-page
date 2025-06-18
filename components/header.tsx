@@ -71,6 +71,14 @@ export default function Header() {
             FAQ
           </Link>
           <a
+            href="https://dashboard.usereflect.io"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-zinc-800 hover:text-black font-medium text-sm tracking-wide transition-colors duration-300"
+          >
+            Dashboard
+          </a>
+          <a
             href="https://discord.gg/usereflect"
             target="_blank"
             rel="noopener noreferrer"
@@ -159,6 +167,15 @@ export default function Header() {
               >
                 FAQ
               </Link>
+              <a
+                href="https://dashboard.usereflect.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 text-zinc-800 hover:text-black font-medium text-sm tracking-wide transition-colors duration-300 hover:bg-gray-50"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Dashboard
+              </a>
               <a
                 href="https://discord.gg/usereflect"
                 target="_blank"
