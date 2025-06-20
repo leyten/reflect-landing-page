@@ -13,6 +13,7 @@ import { useState } from "react"
 export default function Home() {
   const changingWords = ["smarter", "better", "clearer", "calmer"]
   const [timeframe, setTimeframe] = useState("day")
+  const [copied, setCopied] = useState(false)
 
   const dashboardData = {
     day: {
@@ -48,6 +49,16 @@ export default function Home() {
 
   const currentData = dashboardData[timeframe]
 
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText("4XvgyT7bzc9fYVZpg4xn9YMmV33g3QxX6oJUa8WwxBLV")
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error("Failed to copy: ", err)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#f8d300] via-white via-25% to-white">
       <Header />
@@ -72,6 +83,53 @@ export default function Home() {
                 Reflect is an AI co-pilot for emotional traders. It helps you make more money — or lose less — by
                 interrupting the habits that sabotage your trades.
               </p>
+              {/* Contract Address Bar */}
+              <div className="flex items-center justify-center gap-2 bg-white/90 backdrop-blur-xl rounded-xl px-4 py-2 border border-white/80 shadow-xl max-w-fit mx-auto">
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-semibold text-black tracking-wide">$REFLECT CA:</span>
+                  <code className="text-xs font-mono text-black bg-white/80 px-2 py-1 rounded-lg border border-gray-200">
+                    4XvgyT7bzc9fYVZpg4xn9YMmV33g3QxX6oJUa8WwxBLV
+                  </code>
+                </div>
+                <button
+                  onClick={copyToClipboard}
+                  className="flex items-center justify-center w-7 h-7 bg-black hover:bg-black/90 rounded-lg transition-all duration-200 hover:scale-110 shadow-md"
+                  title="Copy contract address"
+                >
+                  {copied ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-white"
+                    >
+                      <polyline points="20,6 9,17 4,12" />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-white"
+                    >
+                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
           </AnimatedSection>
 

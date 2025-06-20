@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import PrivyDropdown from "./privy-dropdown"
 import { Menu, X } from "lucide-react"
 
 export default function Header() {
@@ -71,14 +70,6 @@ export default function Header() {
             FAQ
           </Link>
           <a
-            href="https://dashboard.usereflect.io"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-zinc-800 hover:text-black font-medium text-sm tracking-wide transition-colors duration-300"
-          >
-            Dashboard
-          </a>
-          <a
             href="https://discord.gg/usereflect"
             target="_blank"
             rel="noopener noreferrer"
@@ -128,12 +119,26 @@ export default function Header() {
             </svg>
             <span className="sr-only">Follow on X</span>
           </a>
-          <PrivyDropdown />
+          <a
+            href="https://dashboard.usereflect.io"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-[140px] bg-black text-white hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800 rounded-lg px-3 py-2 text-xs md:text-sm font-medium transition-colors duration-300 text-center md:px-0.5 md:w-28 leading-7 shadow"
+          >
+            Dashboard
+          </a>
         </nav>
 
         {/* Mobile Navigation */}
         <div className="md:hidden flex items-center gap-4">
-          <PrivyDropdown />
+          <a
+            href="https://dashboard.usereflect.io"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-[140px] md:w-[160px] bg-black text-white hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm font-medium transition-colors duration-300 text-center"
+          >
+            Dashboard
+          </a>
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -167,15 +172,6 @@ export default function Header() {
               >
                 FAQ
               </Link>
-              <a
-                href="https://dashboard.usereflect.io"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 py-3 text-zinc-800 hover:text-black font-medium text-sm tracking-wide transition-colors duration-300 hover:bg-gray-50"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Dashboard
-              </a>
               <a
                 href="https://discord.gg/usereflect"
                 target="_blank"
