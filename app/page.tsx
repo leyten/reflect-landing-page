@@ -1,7 +1,6 @@
 "use client"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import Header from "@/components/header"
 import AnimatedHeadline from "@/components/animated-headline"
 import WhyUseReflect from "@/components/features"
 import FAQ from "@/components/faq"
@@ -60,8 +59,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#f8d300] via-white via-25% to-white">
-      <Header />
-
       {/* Hero Section */}
       <section className="pt-20 pb-32 md:pt-28 md:pb-40">
         <div className="container px-4 mx-auto">
