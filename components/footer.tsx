@@ -3,75 +3,81 @@ import Link from "next/link"
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-white py-12">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="space-y-4">
-            <Image src="/reflected-logo.png" alt="Reflect" width={120} height={40} className="h-8 w-auto" />
-            <p className="text-gray-400 text-sm">AI-powered trading co-pilot for smarter decisions.</p>
+    <footer className="py-8 bg-zinc-50">
+      <div className="container px-4 mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="flex items-center mb-8 md:mb-0">
+            <Image
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/LogoTransparant-EFMqjstaAL9FZb6V7FEbMIIXa9gFEu.png"
+              alt="Reflect Logo"
+              width={36}
+              height={36}
+              className="mr-3"
+            />
+            <span className="font-medium text-lg tracking-tight text-zinc-900">Reflect</span>
           </div>
 
-          <div>
-            <h3 className="font-semibold mb-4">Product</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li>
-                <Link href="#features" className="hover:text-white transition-colors">
-                  Features
-                </Link>
-              </li>
-              <li>
-                <Link href="#how-it-works" className="hover:text-white transition-colors">
-                  How it Works
-                </Link>
-              </li>
-              <li>
-                <Link href="#pricing" className="hover:text-white transition-colors">
-                  Pricing
-                </Link>
-              </li>
-            </ul>
-          </div>
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <nav className="flex gap-8 mb-8 md:mb-0">
+              <Link href="#faq" className="text-zinc-600 hover:text-zinc-900 text-sm">
+                FAQ
+              </Link>
+            </nav>
 
-          <div>
-            <h3 className="font-semibold mb-4">Company</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li>
-                <Link href="#about" className="hover:text-white transition-colors">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="#contact" className="hover:text-white transition-colors">
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link href="#careers" className="hover:text-white transition-colors">
-                  Careers
-                </Link>
-              </li>
-            </ul>
-          </div>
+            <div className="flex items-center gap-4">
+              <a
+                href="https://discord.gg/usereflect"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-zinc-600 hover:text-zinc-900"
+                aria-label="Join our Discord server"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="9" cy="12" r="1" />
+                  <circle cx="15" cy="12" r="1" />
+                  <path d="M7.5 7.2c3.5-1 5.5-1 9 0" />
+                  <path d="M7.5 16.8c3.5 1 5.5 1 9 0" />
+                  <path d="M15.5 17c0 1 1.5 3 2 3 1.5 0 2.833-1.667 3.5-3 .667-1.667.5-5.833-1.5-11.5-1.457-1.015-3-1.34-4.5-1.5l-1 2.5" />
+                  <path d="M8.5 17c0 1-1.356 3-1.832 3-1.429 0-2.698-1.667-3.333-3-.635-1.667-.476-5.833 1.428-11.5C6.151 4.485 7.545 4.16 9 4l1 2.5" />
+                </svg>
+                <span className="text-sm">Join Discord</span>
+              </a>
 
-          <div>
-            <h3 className="font-semibold mb-4">Legal</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li>
-                <Link href="#privacy" className="hover:text-white transition-colors">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="#terms" className="hover:text-white transition-colors">
-                  Terms of Service
-                </Link>
-              </li>
-            </ul>
+              <a
+                href="https://x.com/use_reflect"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-zinc-600 hover:text-zinc-900"
+                aria-label="Follow us on X (Twitter)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M4 4l11.733 16h4.267l-11.733 -16z" />
+                  <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" />
+                </svg>
+                <span className="text-sm">Follow on X</span>
+              </a>
+            </div>
           </div>
-        </div>
-
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-          <p>&copy; 2024 Reflect. All rights reserved.</p>
         </div>
       </div>
     </footer>
