@@ -5,7 +5,6 @@ import Header from "@/components/header"
 import AnimatedHeadline from "@/components/animated-headline"
 import WhyUseReflect from "@/components/features"
 import FAQ from "@/components/faq"
-import Footer from "@/components/footer"
 import AnimatedSection from "@/components/animated-section"
 import PartnersMarquee from "@/components/partners-marquee"
 import { useState } from "react"
@@ -373,8 +372,6 @@ export default function Home() {
       <WhyUseReflect />
 
       <FAQ />
-
-      <Footer />
     </div>
   )
 }
