@@ -49,7 +49,7 @@ export default function Home() {
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText("4XvgyT7bzc9fYVZpg4xn9YMmV33g3QxX6oJUa8WwxBLV")
+      await navigator.clipboard.writeText("TBA")
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
@@ -84,7 +84,7 @@ export default function Home() {
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-semibold text-black tracking-wide">$REFLECT CA:</span>
                   <code className="text-xs font-mono text-black bg-white/80 px-2 py-1 rounded-lg border border-gray-200">
-                    4XvgyT7bzc9fYVZpg4xn9YMmV33g3QxX6oJUa8WwxBLV
+                    TBA
                   </code>
                 </div>
                 <button
